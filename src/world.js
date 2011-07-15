@@ -1,0 +1,178 @@
+/***
+* world.js
+* Contains World entity that is used to encapsulate all objects in a single canvas
+***/
+
+// Create a "World" object to hold all the fun things like cameras and scenes
+ENGINE.World = function( args ){
+	
+	// Setup the canvas to draw on
+	this.canvas = args.canvas || {
+		height: window.innerHeight,
+		width: window.innerWidth
+	}
+		
+	// Setup the camera to look through
+	this.camera = undefined;
+	if(args.camera){
+		if(args.camera.constructor.toString().indexOf("Array") == -1) 
+			this.camera = args.camera
+		else {
+			this.camera = new THREE.Camera(
+				args.camera.fov,
+				args.camera.aspect,
+				args.camera.near,
+				args.camera.far
+			);
+		}
+	} else {
+		this.camera = new THREE.Camera( 60, this.canvas.width / this.canvas.height, 1, 10000 );
+	}
+	
+	// Setup the scene to place objects in
+	this.scene = new THREE.Scene();
+	
+	// Create a renderer to draw the Scene in the canvas
+	this.renderer = new THREE.WebGLRenderer();
+	this.renderer.setSize( this.canvas.width, this.canvas.height );
+		
+	if( args.container )
+		$(args.container).append( this.renderer.domElement );
+		
+		
+	// Helper variables
+	
+	// Function to use for custom rendering (called every frame)
+	this.render = function(){};
+}
+
+ENGINE.World.prototype = {
+	
+	// Begin rendering the world -- you MUST call this in order to have anything happen
+	startRender : function(){
+	
+		ENGINE.animateWorld( this );
+		
+	},
+	
+	// Basic wrapper function to add an entity to the scene
+	addEntity : function( obj ){ 
+	
+		this.scene.addChild( obj );
+
+	},
+	
+	addBlock : function( args ){
+		
+		var block = new THREE.CubeGeometry( args.width, args.height, args.depth, args.segmentsWidth, args.segmentsHeight, args.segmentsDepth, args.materials, args.flipped, args.sides );
+		var material;
+		if( args.matObj ) 
+			material = args.matObj;
+		else 
+			material = new THREE.MeshFaceMaterial();
+		var mesh = new THREE.Mesh( block, material );		
+		mesh.position = args.pos || Vector(0,0,0);
+		this.addEntity( mesh );
+		
+	},
+	
+	// Add a basic sphere
+	addSphere : function( args ){
+	
+		var sphere = new THREE.SphereGeometry( args.radius, args.segments, args.rings );
+		var material;
+		if( args.matObj ) 
+			material = args.matObj;
+		else 
+			material = new THREE.MeshFaceMaterial();
+		var mesh = new THREE.Mesh( sphere, material );
+		mesh.position = args.pos || Vector(0,0,0);
+		this.addEntity( mesh );
+	
+	},
+	
+	// Add a point light
+	addPointLight : function( pos, color ){
+		
+		var light = new THREE.PointLight( color || 0xFFFFFF );
+		light.position = pos || Vector(0,0,0);
+		this.scene.addLight( light );
+	
+	},
+	
+	// Add ambient light
+	addAmbientLight : function( color ){
+	
+		var ambientLight = new THREE.AmbientLight( color || 0xFFFFFF );
+		this.addEntity( ambientLight );
+
+	},
+	
+	// Add a directional light
+	addDirectionalLight : function( pos, color, intensity, distance ){
+		
+		var directionalLight = new THREE.DirectionalLight( color || 0xFFFFFF, intensity, distance );
+		directionalLight.position = pos;
+		directionalLight.position.normalize();
+		this.addEntity( directionalLight );
+		
+	},
+	
+	// Load a JSON map file
+	loadMap : function( file ){
+	
+		$.getJSON( file, function( data ){
+			print_r(data);
+		});
+	
+	},
+	
+	getMapString : function(){
+	
+		var map = {};
+		map.entities = [ world.camera ];
+		map.entities = map.entities.concat( world.scene.objects );
+		
+		for( i in map )
+			console.log( i, map[i] );
+			//map[i] = serialize( map[i] );
+		
+		return JSON.stringify( map );
+	
+	},
+	
+	setSkybox : function( path, extension ){
+		
+		var urls = [
+			path + 'px' + extension, path + 'nx' + extension,
+			path + 'py' + extension, path + 'ny' + extension,
+			path + 'pz' + extension, path + 'nz' + extension
+		];
+		
+		var textureCube = THREE.ImageUtils.loadTextureCube( urls, new THREE.CubeRefractionMapping() );
+		var shader = THREE.ShaderUtils.lib["cube"];
+		shader.uniforms["tCube"].texture = textureCube;
+
+		var material = new THREE.MeshShaderMaterial( {
+
+			fragmentShader: shader.fragmentShader,
+			vertexShader: shader.vertexShader,
+			uniforms: shader.uniforms
+
+		} ),
+
+		mesh = new THREE.Mesh( new THREE.CubeGeometry( 100000, 100000, 100000, 1, 1, 1, null, true ), material );
+		this.addEntity( mesh );
+		
+	},
+	
+	enableFog : function( turnOn, color, density ){
+		
+		if( turnOn )
+			this.scene.fog = new THREE.FogExp2( color || 0xFFFFFF, density || 0.00015 );
+		else
+			this.scene.fog = undefined;
+	
+	}
+
+}
