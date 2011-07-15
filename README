@@ -1,0 +1,1 @@
+GLEngine is a simple javascript framework that even further abstracts the process of using WebGL in today's browsers. It relies on mrdoob's three.js (github.com/mrdoob/three.js) for the grunt work and then adds many features.
