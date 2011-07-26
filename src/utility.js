@@ -61,7 +61,11 @@ function Vector(x,y,z){
 
 // RGB to hex color function
 function Color(r,g,b){
-	return parseInt(r.toString(16) + g.toString(16) + b.toString(16),16);
+	return parseInt(
+		(r < 16 ? "0" : "") + r.toString(16) + 
+		(g < 16 ? "0" : "") + g.toString(16) + 
+		(b < 16 ? "0" : "") + b.toString(16)
+	,16);
 }
 
 // Copy an object

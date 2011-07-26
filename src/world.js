@@ -74,6 +74,7 @@ ENGINE.World.prototype = {
 		mesh.position = args.pos || Vector(0,0,0);
 		this.addEntity( mesh );
 		
+		THREE.Collisions.colliders.push( THREE.CollisionUtils.MeshOBB( mesh ) );
 	},
 	
 	// Add a basic sphere

@@ -6,28 +6,49 @@
 // Create the ENGINE array to store all functions
 var ENGINE = ENGINE || {
 	directory: 'engine/',
-	scripts: [
-		'Three.js',
-		'cycle.js',
+	include: [
+		'lib/Three.js',
 		'utility.js',
 		'material.js',
 		'entity.js',
 		'render.js',
 		'camera.js',
 		'world.js'
-	]
+	],
+	status: 'Loading...'
 };
 
-// Load in all requisite scripts -- you MUST call this before doing absolutely anything else to get the engine started 
-ENGINE.loadScripts = function(){
+ENGINE.loadScript = function( script ){
+	
+	var script = document.createElement('script');
+	script.type = 'text/javascript';
+	script.src = ENGINE.directory + ENGINE.include[index];
+	$('head').append(script);
+	
+}
 
-	for( index in ENGINE.scripts ){
-		var script = document.createElement('script');
-		script.type = 'text/javascript';
-		script.src = ENGINE.directory + ENGINE.scripts[index];
-		$('head').append(script);
+ENGINE.loadScripts = function( arr ){
+
+	for( index in arr ){
+		this.loadScript( arr[index] );
 	}
 
+}
+
+ENGINE.loadBar = function(){
+	
+	$('body').append('<div class="loadBar"></div>');
+	var bar = $('.loadBar');
+	bar.progressbar({
+		value: 32
+	});
+	
+}
+
+ENGINE.Initialize = function(){
+		
+	ENGINE.loadScripts( ENGINE.include );
+	
 }
 
 /***
