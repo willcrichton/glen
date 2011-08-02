@@ -35,19 +35,45 @@ ENGINE.loadScripts = function( arr ){
 
 }
 
-ENGINE.loadBar = function(){
+ENGINE.connectToServer = function( host ){
+
+	host = host || 'ws://localhost/';
+	try {
+		ENGINE.socket = new WebSocket(host);
+		ENGINE.socket.onopen = function(){
+			console.log('Connection established.');
+		}
+		ENGINE.socket.onmessage = function(data){
+			console.log(data.data);
+		}
+		ENGINE.socket.onclose = function(){
+			console.log("Connection closing.");
+		}
+	}
+	catch( e ) {
+		console.log(e);
+	}
 	
-	$('body').append('<div class="loadBar"></div>');
+}
+
+ENGINE.loadBar = function( val ){
+	
+	if($('.loadBar').length == 0)
+		$('body').append('<div class="loadBar"></div>');
+		
 	var bar = $('.loadBar');
 	bar.progressbar({
-		value: 32
+		value: val || 0
 	});
 	
 }
 
-ENGINE.Initialize = function(){
+ENGINE.Initialize = function( debug ){
 		
+	if( debug ) console.log("Loading scripts...");
 	ENGINE.loadScripts( ENGINE.include );
+	ENGINE.connectToServer('ws://localhost:6994/3d/server.php');
+	if( debug ) console.log("Establishing connection...");
 	
 }
 
