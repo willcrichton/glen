@@ -1,12 +1,3 @@
-<?
-	/************************
-	* MySQL Info:
-	* User: willcric_engine
-	* DB: willcric_engine
-	* Pass: D-Vv5v[slu*X
-	*************************/
-?>
-
 <!DOCTYPE html>
 <html>
 	<head>
