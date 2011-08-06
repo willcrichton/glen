@@ -1,4 +1,4 @@
-ENGINE.loadTexture = function( path ) {
+Engine.loadTexture = function( path ) {
 
 	var image = new Image();
 	image.onload = function () { texture.needsUpdate = true; };

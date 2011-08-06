@@ -1,17 +1,19 @@
 // Called every frame to animate the world and request a new animation frame
-ENGINE.animateWorld = function( world ){
+Engine.animateWorld = function( world ){
 	
 	requestAnimationFrame( function(){
-		ENGINE.animateWorld( world );
+		Engine.animateWorld( world );
 	});
-	ENGINE.renderWorld( world );
+	Engine.renderWorld( world );
 
 }
 
 // Also called every frame to actually render the world and call any custom rendering from the world object
-ENGINE.renderWorld = function( world ){
+Engine.renderWorld = function( world ){
 
-	world.render();
+	if(world.render) world.render();
 	world.renderer.render(world.scene,world.camera);
+	world.thinkInternal();
+	if(world.think) world.think();
 	
 }

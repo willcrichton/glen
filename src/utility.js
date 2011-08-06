@@ -1,7 +1,7 @@
-/***
+/******************************************************
 * utility.js
 * Holds a bunch of miscellaneous functions for various purposes
-***/
+******************************************************/
 
 // Cross-browser compatibility for requestAnimationFrame (used to update scene)
 if ( !window.requestAnimationFrame ) {
@@ -25,6 +25,14 @@ if ( !window.requestAnimationFrame ) {
 // Vector3 toString function for debugging
 THREE.Vector3.prototype.toString = function(){
 	return '(' + this.x + ', ' + this.y + ', ' + this.z + ')';
+}
+
+THREE.Vector3.prototype.equals = function(vector){
+	return (this.x == vector.x && this.y == vector.y && this.z == vector.z);
+}
+
+THREE.Vector3.prototype.copy = function(){
+	return new Vector(this.x,this.y,this.z);
 }
 
 // Equivalent to PHP's print_r
@@ -56,7 +64,13 @@ function insert( arr, obj ){
 
 // Slightly shorter vector initialization
 function Vector(x,y,z){
-	return new THREE.Vector3(x,y,z);
+	if(x == undefined)
+		return new THREE.Vector3();
+	else if(typeof x == "string"){
+		var nums = x.replace(/[()\s]/gi,'').split(',');		
+		return new THREE.Vector3(nums[0],nums[1],nums[2]);
+	} else 
+		return new THREE.Vector3(x,y,z);
 }
 
 // RGB to hex color function
@@ -78,6 +92,7 @@ function clone(obj) {
     return copy;
 }
 
+// Make an object writable as JSON?
 function serialize( obj ){
 	obj.domElement = undefined;
 	obj.parent = undefined;
@@ -89,3 +104,4 @@ function serialize( obj ){
 	}
 	return newObj;
 }
+

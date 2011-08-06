@@ -1,4 +1,11 @@
-ENGINE.Camera = function( args ){
+/******************************************************
+* camera.js
+* A fail attempt at recreating an FPS camera.
+* Needs "mouse locking" to work. Just use
+* THREE.FirstPersonCamera, I guess.
+******************************************************/
+
+Engine.Camera = function( args ){
 		
 	THREE.FirstPersonCamera.call( this, args );
 	
@@ -106,6 +113,6 @@ ENGINE.Camera = function( args ){
 	
 }
 
-ENGINE.Camera.prototype = new THREE.FirstPersonCamera({fov:0,aspect:0,near:0,far:0});
-ENGINE.Camera.prototype.constructor = ENGINE.Camera;
-ENGINE.Camera.prototype.supr = THREE.Camera.prototype;
+Engine.Camera.prototype = new THREE.FirstPersonCamera({fov:0,aspect:0,near:0,far:0});
+Engine.Camera.prototype.constructor = Engine.Camera;
+Engine.Camera.prototype.supr = THREE.Camera.prototype;

@@ -1,6 +1,6 @@
 <?php  
 
-// Usage: $master=new WebSocket("localhost",12345);
+// Thanks to georgenava@gmail.com for this script (http://code.google.com/p/phpwebsocket/)
 
 class WebSocket{
   var $master;
@@ -49,6 +49,14 @@ class WebSocket{
     /* Basic usage is to echo incoming messages back to client */
     $this->send($user->socket,$msg);
   }
+  
+  function onConnect($user){
+	/* Hook into this function for when the user has succesfully shaken hands w/ the server */
+  }
+  
+  function onDisconnect($user){
+	/* Hook into here for when the user leaves the connection */
+  }
 
   function send($client,$msg){ 
     $this->say("> ".$msg);
@@ -61,6 +69,7 @@ class WebSocket{
     $user = new User();
     $user->id = uniqid();
     $user->socket = $socket;
+	$user->controller = $this;
     array_push($this->users,$user);
     array_push($this->sockets,$socket);
     $this->log($socket." CONNECTED!");
@@ -68,6 +77,7 @@ class WebSocket{
   }
 
   function disconnect($socket){
+	$this->onDisconnect($this->getuserbysocket($socket));
     $found=null;
     $n=count($this->users);
     for($i=0;$i<$n;$i++){
@@ -103,6 +113,7 @@ class WebSocket{
     $user->handshake=true;
     $this->log($upgrade);
     $this->log("Done handshaking...");
+	$this->onConnect($user);
     return true;
   }
   
@@ -157,6 +168,10 @@ class User{
   var $id;
   var $socket;
   var $handshake;
+  var $controller;
+  function send($msg){
+	$this->controller->send($this->socket,$msg);
+  }
 }
 
 ?>

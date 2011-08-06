@@ -1,10 +1,11 @@
-/***
+/******************************************************
 * world.js
-* Contains World entity that is used to encapsulate all objects in a single canvas
-***/
+* Contains World entity that is used to encapsulate all
+* objects in a single canvas
+******************************************************/
 
 // Create a "World" object to hold all the fun things like cameras and scenes
-ENGINE.World = function( args ){
+Engine.World = function( args ){
 	
 	// Setup the canvas to draw on
 	this.canvas = args.canvas || {
@@ -29,13 +30,17 @@ ENGINE.World = function( args ){
 		this.camera = new THREE.Camera( 60, this.canvas.width / this.canvas.height, 1, 10000 );
 	}
 	
+	// Create a player entity for our main dude
+	this.me = new Engine.Player( { object: this.camera } );
+	
 	// Setup the scene to place objects in
 	this.scene = new THREE.Scene();
 	
 	// Create a renderer to draw the Scene in the canvas
 	this.renderer = new THREE.WebGLRenderer();
 	this.renderer.setSize( this.canvas.width, this.canvas.height );
-		
+	
+	// Put the renderer in the DOM, assuming we have a container
 	if( args.container )
 		$(args.container).append( this.renderer.domElement );
 		
@@ -44,14 +49,29 @@ ENGINE.World = function( args ){
 	
 	// Function to use for custom rendering (called every frame)
 	this.render = function(){};
+	
+	// Function to use that's called often
+	this.think = function(){};
+	
+	// Function to use for custom updating
+	this.packetReceived = function(){};
+	
+	// Array of all players (minus this.me)
+	this.players = [];
+	
+	// see: think
+	this.lastPosition = Vector();
+	
+	// Add this object to the master list
+	insert(Engine.worlds,this);
 }
 
-ENGINE.World.prototype = {
+Engine.World.prototype = {
 	
 	// Begin rendering the world -- you MUST call this in order to have anything happen
 	startRender : function(){
 	
-		ENGINE.animateWorld( this );
+		Engine.animateWorld( this );
 		
 	},
 	
@@ -74,7 +94,10 @@ ENGINE.World.prototype = {
 		mesh.position = args.pos || Vector(0,0,0);
 		this.addEntity( mesh );
 		
+		// Testing collisions? (IN PROGRESS)
 		THREE.Collisions.colliders.push( THREE.CollisionUtils.MeshOBB( mesh ) );
+		
+		return mesh;
 	},
 	
 	// Add a basic sphere
@@ -89,6 +112,8 @@ ENGINE.World.prototype = {
 		var mesh = new THREE.Mesh( sphere, material );
 		mesh.position = args.pos || Vector(0,0,0);
 		this.addEntity( mesh );
+		
+		return mesh;
 	
 	},
 	
@@ -119,7 +144,7 @@ ENGINE.World.prototype = {
 		
 	},
 	
-	// Load a JSON map file
+	// Load a JSON map file (IN PROGRESS)
 	loadMap : function( file ){
 	
 		$.getJSON( file, function( data ){
@@ -128,6 +153,7 @@ ENGINE.World.prototype = {
 	
 	},
 	
+	// Turn the existing world into a JSON string (IN PROGRESS)
 	getMapString : function(){
 	
 		var map = {};
@@ -142,6 +168,7 @@ ENGINE.World.prototype = {
 	
 	},
 	
+	// Set the skybox
 	setSkybox : function( path, extension ){
 		
 		var urls = [
@@ -167,6 +194,7 @@ ENGINE.World.prototype = {
 		
 	},
 	
+	// Turn on fog
 	enableFog : function( turnOn, color, density ){
 		
 		if( turnOn )
@@ -174,6 +202,89 @@ ENGINE.World.prototype = {
 		else
 			this.scene.fog = undefined;
 	
+	},
+	
+	addPlayer : function( args ){
+		
+		var newPlayer = new Engine.Player( args );
+		var model = this.addBlock({
+			width: 10, height: 10, depth: 10,
+			matObj: new THREE.MeshPhongMaterial({
+				color: 0x0000FF
+			})
+		});
+		newPlayer.setObject( model );
+		
+		insert(this.players,newPlayer);
+		
+	},
+	
+	packetReceivedInternal : function( data ){
+		
+		try {
+			var jsonarr = $.parseJSON( data.data );
+			var type = jsonarr.PacketType;
+			var arr = jsonarr.data;
+			switch(type){
+			
+				case "load-players":
+					for(var i = 0; i < arr.length; i++){
+						if(arr[i].isMe)
+							this.me.id = arr[i].id
+						else
+							this.addPlayer( arr[i] );
+					}
+					break;
+					
+				case "new-player":
+					this.addPlayer( arr );
+					break;
+					
+				case "remove-player":
+					var index = -1;
+					for(var i = 0; i < this.players.length; i++){
+						if(this.players[i].id == arr.id){
+							index = i; break;
+						}
+					}
+					this.players.splice(index,1);
+					break;
+					
+				case "position":
+					var player = this.getPlayerByID(arr.id);
+					if(player){
+						player.setPos( Vector(arr.position) );
+					}
+					break;
+					
+				default:
+					console.log('Invalid PacketType sent:',data.data);
+					break;
+					
+			}
+		} catch( e ){
+			// Error handling for JSON parse fail here
+			console.log(e,'Invalid packet:', data.data);
+		}
+	},
+	
+	thinkInternal : function(){
+		
+		if(!this.me.getPos().equals(this.lastPosition)){
+			
+			Engine.sendPacket(this.me.getPos().toString(),{ PacketType: 'position' });
+			this.lastPosition = this.me.getPos().copy();
+		}
+		
+	},
+	
+	getPlayerByID : function( id ){
+		
+		for(var i = 0; i < this.players.length; i++)
+			if(this.players[i].id == id) 
+				return this.players[i];
+		return false;
+		
 	}
-
+	
 }

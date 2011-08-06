@@ -1,33 +1,37 @@
-/***
+/******************************************************
 * engine.js
-* Contains ENGINE variable and initialization functions
-***/
+* Contains Engine variable and initialization functions
+******************************************************/
 
-// Create the ENGINE array to store all functions
-var ENGINE = ENGINE || {
+// Create the Engine array to store all functions
+var Engine = Engine || {
 	directory: 'engine/',
 	include: [
 		'lib/Three.js',
 		'utility.js',
+		'socket.js',
 		'material.js',
 		'entity.js',
 		'render.js',
 		'camera.js',
 		'world.js'
 	],
-	status: 'Loading...'
+	status: 'Loading...',
+	connected: false,
+	players: [],
+	worlds: []
 };
 
-ENGINE.loadScript = function( script ){
+Engine.loadScript = function( script ){
 	
 	var script = document.createElement('script');
 	script.type = 'text/javascript';
-	script.src = ENGINE.directory + ENGINE.include[index];
+	script.src =this.directory + this.include[index];
 	$('head').append(script);
 	
 }
 
-ENGINE.loadScripts = function( arr ){
+Engine.loadScripts = function( arr ){
 
 	for( index in arr ){
 		this.loadScript( arr[index] );
@@ -35,19 +39,24 @@ ENGINE.loadScripts = function( arr ){
 
 }
 
-ENGINE.connectToServer = function( host ){
+Engine.connectToServer = function( host ){
 
 	host = host || 'ws://localhost/';
 	try {
-		ENGINE.socket = new WebSocket(host);
-		ENGINE.socket.onopen = function(){
+		this.socket = new WebSocket(host);
+		this.socket.onopen = function(){
 			console.log('Connection established.');
+			Engine.connected = true;
 		}
-		ENGINE.socket.onmessage = function(data){
-			console.log(data.data);
+		this.socket.onmessage = function(data){
+			for(var i = 0; i < Engine.worlds.length; i++){
+				Engine.worlds[i].packetReceivedInternal( data );
+				Engine.worlds[i].packetReceived( data );
+			}
 		}
-		ENGINE.socket.onclose = function(){
+		this.socket.onclose = function(){
 			console.log("Connection closing.");
+			Engine.connected = false;
 		}
 	}
 	catch( e ) {
@@ -56,7 +65,7 @@ ENGINE.connectToServer = function( host ){
 	
 }
 
-ENGINE.loadBar = function( val ){
+Engine.loadBar = function( val ){
 	
 	if($('.loadBar').length == 0)
 		$('body').append('<div class="loadBar"></div>');
@@ -68,16 +77,16 @@ ENGINE.loadBar = function( val ){
 	
 }
 
-ENGINE.Initialize = function( debug ){
+Engine.Initialize = function( debug ){
 		
-	if( debug ) console.log("Loading scripts...");
-	ENGINE.loadScripts( ENGINE.include );
-	ENGINE.connectToServer('ws://localhost:6994/3d/server.php');
+	//if( debug ) console.log("Loading scripts...");
+	//this.loadScripts( this.include );
+	this.connectToServer('ws://localhost:6967/3d/server.php');
 	if( debug ) console.log("Establishing connection...");
 	
 }
 
-/***
+/******************************************************************
 TO DO
 - texture tiling (e.g. floor)
 
@@ -85,5 +94,7 @@ IDEA DUMP
 - Map Loader (Hammer style, using JSON)
 - Read /engine directory for files, don't put them in a stupid array
 - First person camera that doesn't suck
-- Multiplayer support (figure out WebSockets?)
-***/
+- Multiplayer support, including
+	- player visibility
+	- chatting
+*****************************************************************`*/
