@@ -61,7 +61,7 @@
 				});				
 
 				var plane = new THREE.PlaneGeometry( 10000, 10000 );
-				var grassTex = Engine.loadTexture( 'images/texture-grass.jpg' );
+				var grassTex = Engine.loadTexture( 'images/texture-grass.jpg', [ 10000, 10000 ] );
 				var planeMesh = new THREE.Mesh(plane,grassTex);
 				planeMesh.rotation = Vector(-1 * Math.PI / 2,0,0);
 				world.addEntity( planeMesh );
