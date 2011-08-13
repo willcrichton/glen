@@ -5,8 +5,7 @@
 		
 		<link href="styles/jquery-ui-1.8.14.custom.css" rel="stylesheet" type="text/css" />
 		<link href="styles/style.css" rel="stylesheet" type="text/css" />
-	</head>
-	<body>
+		
 		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
 		<script src="engine/lib/jquery-ui-1.8.14.custom.min.js"></script>
 		<script src='engine/lib/Three.js'></script>
@@ -41,37 +40,41 @@
 				});
 				
 				world.me.setPos( Vector(100,30,100) );
+				world.camera.lat = Math.PI;
+				world.camera.lon = Math.PI / 2;
 				world.setSkybox('textures/cube/skybox/','.jpg');
 				world.enableFog( true, 0xFFE9AD, 0.00025 );
 				
-				world.addSphere({
-					pos: Vector(0,150,0),
-					radius: 50, segments: 32, rings: 32,
-					matObj: new THREE.MeshPhongMaterial({
-						color: 0xFF0000
-					})
-				});
-				
-				world.addBlock({
-					pos: Vector(0,50,0),
-					width: 100, height: 100, depth: 100,
-					matObj: new THREE.MeshPhongMaterial({
-						color: 0x00FF00
-					})
-				});				
-
 				var plane = new THREE.PlaneGeometry( 10000, 10000 );
 				var grassTex = Engine.loadTexture( 'images/texture-grass3.jpg', [ 10000, 10000 ] );
 				var planeMesh = new THREE.Mesh(plane,grassTex);
 				planeMesh.rotation = Vector(-1 * Math.PI / 2,0,0);
-				world.addEntity( planeMesh );
+				world.addEntity( planeMesh );	
+				
+				for(var row = 0; row < 15; row++){
+					for(var col = 0; col < 15; col++){
+						world.addBlock({
+							pos: Vector(1000 + row * 105, 50 + Math.random() * 500, 1000 + col * 105),
+							width: 100, height: 100, depth: 100,
+							matObj: new THREE.MeshPhongMaterial({
+								color: ColorRandom()
+							})
+						});
+					}
+				}
+				
+				world.addHook( 'mouseover', 'mouseOverTest', function( c ){
+					c.mesh.materials[0].opacity = 0.5;
+				});
 				
 				world.addAmbientLight( 0xCCCCCC );
 				world.addDirectionalLight( Vector(1,1,0.5).normalize(), 0xFFFFFF, 1.5 );
+				world.addPointLight( Vector(), 0xFFFFFF );
 				
 				world.startRender();
 				
 			};
 		</script>
-	</body>
+	</head>
+	<body></body>
 </html>

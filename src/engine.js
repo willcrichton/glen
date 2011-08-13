@@ -50,7 +50,6 @@ Engine.connectToServer = function( host ){
 		}
 		this.socket.onmessage = function(data){
 			for(var i = 0; i < Engine.worlds.length; i++){
-				Engine.worlds[i].packetReceivedInternal( data );
 				Engine.worlds[i].packetReceived( data );
 			}
 		}

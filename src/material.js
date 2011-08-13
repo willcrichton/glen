@@ -9,7 +9,6 @@ Engine.loadTexture = function( path, repeat ) {
 	image.src = path;
 
 	var texture  = new THREE.Texture( image, new THREE.UVMapping(), THREE.RepeatWrapping, THREE.RepeatWrapping, THREE.NearestFilter, THREE.LinearMipMapLinearFilter );
-		
 	
 	return new THREE.MeshLambertMaterial( { map: texture } );
 

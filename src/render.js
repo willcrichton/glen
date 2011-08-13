@@ -11,9 +11,8 @@ Engine.animateWorld = function( world ){
 // Also called every frame to actually render the world and call any custom rendering from the world object
 Engine.renderWorld = function( world ){
 
-	if(world.render) world.render();
+	world.callHook( 'render', world );
 	world.renderer.render(world.scene,world.camera);
 	world.thinkInternal();
-	if(world.think) world.think();
 	
 }

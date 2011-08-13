@@ -59,7 +59,7 @@ function print_r(theObj){
 
 // Simple insert function
 function insert( arr, obj ){
-	arr.splice( arr.length, 0, obj );
+	arr.push( obj );
 }
 
 // Slightly shorter vector initialization
@@ -80,6 +80,10 @@ function Color(r,g,b){
 		(g < 16 ? "0" : "") + g.toString(16) + 
 		(b < 16 ? "0" : "") + b.toString(16)
 	,16);
+}
+
+function ColorRandom(){
+	return Color(Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255));
 }
 
 // Copy an object

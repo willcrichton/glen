@@ -41,20 +41,26 @@ Engine.World = function( args ){
 	this.renderer.setSize( this.canvas.width, this.canvas.height );
 	
 	// Put the renderer in the DOM, assuming we have a container
-	if( args.container )
-		$(args.container).append( this.renderer.domElement );
+	$(args.container || 'body').append( this.renderer.domElement );
 		
+	this.mouse = { x: 0, y: 0 };
+	this.projector = new THREE.Projector();
+	var w = this;
+	$( this.renderer.domElement ).mousemove(function(e){
+		e.preventDefault();
+		w.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+		w.mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+	});
+	
+	/* Current hooks:
+		mousehover - Called every frame the mouse hovers over a mesh
+		mouseover - Called once when mouseover, as opposed to every frame
+		render - Called before the scene is rendered
+		think - Called every frame
+	*/
+	this.hooks = {};
 		
 	// Helper variables
-	
-	// Function to use for custom rendering (called every frame)
-	this.render = function(){};
-	
-	// Function to use that's called often
-	this.think = function(){};
-	
-	// Function to use for custom updating
-	this.packetReceived = function(){};
 	
 	// Array of all players (minus this.me)
 	this.players = [];
@@ -112,6 +118,8 @@ Engine.World.prototype = {
 		var mesh = new THREE.Mesh( sphere, material );
 		mesh.position = args.pos || Vector(0,0,0);
 		this.addEntity( mesh );
+		
+		THREE.Collisions.colliders.push( THREE.CollisionUtils.MeshOBB( mesh ) );
 		
 		return mesh;
 	
@@ -262,6 +270,8 @@ Engine.World.prototype = {
 					break;
 					
 			}
+			
+			this.callHook( 'packetReceived', jsonarr );
 		} catch( e ){
 			// Error handling for JSON parse fail here
 			console.log(e,'Invalid packet:', data.data);
@@ -270,10 +280,26 @@ Engine.World.prototype = {
 	
 	thinkInternal : function(){
 		
+		// Send position updates to server
 		if(this.me && !this.me.getPos().equals(this.lastPosition)){
 			Engine.sendPacket(this.me.getPos().toString(),{ PacketType: 'position' });
 			this.lastPosition = this.me.getPos().clone();
 		}
+		
+		// Call mouseover event on cursor "collide" with mesh
+		var vector = new THREE.Vector3( this.mouse.x, this.mouse.y, 0.5 );
+		this.projector.unprojectVector( vector, this.camera );
+		var ray = new THREE.Ray( this.camera.position, vector.subSelf( this.camera.position ).normalize() );
+		var c = THREE.Collisions.rayCastNearest( ray );
+		if( c ){
+			this.callHook( 'mousehover', c );
+			if( this.mouseOver && this.mouseOver != c.mesh )
+				this.callHook( 'mouseover', c );
+			this.mouseOver = c.mesh;
+		}
+		
+		// Call other think hooks
+		this.callHook( 'think', this );
 		
 	},
 	
@@ -283,6 +309,32 @@ Engine.World.prototype = {
 			if(this.players[i].id == id) 
 				return this.players[i];
 		return false;
+		
+	},
+	
+	addHook : function( hook, name, func ){
+		
+		if( this.hooks[hook] ){
+			if( this.hooks[hook][name] )
+				throw new Error('Hook of type "' + hook + '" and name "' + name + '" already exist.');
+			else
+				this.hooks[hook][name] = func;
+		} else {
+			this.hooks[hook] = {};
+			this.addHook( hook, name, func );
+		}
+		
+	},
+	
+	callHook : function( hook ){
+		
+		var args = Array.prototype.slice.call(arguments);
+		args.splice( 0, 1 );
+		if( this.hooks[hook] ){
+			for( i in this.hooks[hook] ){
+				this.hooks[hook][i].apply(this, args);
+			}
+		}
 		
 	}
 	
