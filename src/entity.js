@@ -32,7 +32,7 @@ Engine.Player = function( args ){
 	
 	this.setPos = function( vector ){
 		if( this.object )
-			this.object.position = vector.copy();
+			this.object.position = vector.clone();
 	}
 	
 	this.setObject = function( obj ){

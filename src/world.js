@@ -270,10 +270,9 @@ Engine.World.prototype = {
 	
 	thinkInternal : function(){
 		
-		if(!this.me.getPos().equals(this.lastPosition)){
-			
+		if(this.me && !this.me.getPos().equals(this.lastPosition)){
 			Engine.sendPacket(this.me.getPos().toString(),{ PacketType: 'position' });
-			this.lastPosition = this.me.getPos().copy();
+			this.lastPosition = this.me.getPos().clone();
 		}
 		
 	},

@@ -31,8 +31,8 @@ THREE.Vector3.prototype.equals = function(vector){
 	return (this.x == vector.x && this.y == vector.y && this.z == vector.z);
 }
 
-THREE.Vector3.prototype.copy = function(){
-	return new Vector(this.x,this.y,this.z);
+THREE.Vector3.prototype.clone = function(){
+	return Vector(this.x,this.y,this.z);
 }
 
 // Equivalent to PHP's print_r

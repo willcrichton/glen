@@ -79,8 +79,6 @@ Engine.loadBar = function( val ){
 
 Engine.Initialize = function( debug ){
 		
-	//if( debug ) console.log("Loading scripts...");
-	//this.loadScripts( this.include );
 	this.connectToServer('ws://localhost:6967/3d/server.php');
 	if( debug ) console.log("Establishing connection...");
 	
