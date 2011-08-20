@@ -55,12 +55,14 @@
 				var blocks = [];
 				for(var row = 0; row < 15; row++){
 					for(var col = 0; col < 15; col++){
-						var b = world.addBlock({
-							pos: Vector(1000 + row * 105, 50 + Math.random() * 500, 1000 + col * 105),
+						var b = new Engine.Entity( "block", {
+							pos: Vector(
+								1000 + row * 105, 
+								50 + Math.random() * 500, 
+								1000 + col * 105
+							),
 							width: 100, height: 100, depth: 100,
-							matObj: new THREE.MeshPhongMaterial({
-								color: ColorRandom()
-							})
+							material: new THREE.MeshPhongMaterial({ color: ColorRandom() })
 						});
 						b.rising = Math.random() > 0.5;
 						blocks.push(b);
@@ -74,26 +76,28 @@
 				world.addHook( 'think', 'blockMoveTest', function(){
 					for(i in blocks){
 						var b = blocks[i];
-						var pos = b.position;
+						var pos = b.getPos();
 						if(pos.y > 550){ b.rising = false; }
 						else if(pos.y < 50){ b.rising = true; }
-						b.position.y += (b.rising ? 1 : -1) * 5;
+						b.getPos().y += (b.rising ? 1 : -1) * 5;
 					}
 				})
 				
-				world.addText({
+				new Engine.Entity( "text", {
 					text: "glengine",
-					pos: Vector(-100,50, 0),
+					pos: Vector(-100,50, -100),
 					curveSegments: 12,
 					height: 10,
-					matObj: new THREE.MeshPhongMaterial({
-						color: ColorRandom()
-					})
+					material: new THREE.MeshPhongMaterial({ color: ColorRandom() })
 				});
 				
-				world.addAmbientLight( 0xCCCCCC );
-				world.addDirectionalLight( Vector(1,1,0.5).normalize(), 0xFFFFFF, 1.5 );
-				world.addPointLight( Vector(), 0xFFFFFF );
+				new Engine.Entity("ambientLight",{color: 0xCCCCCC});
+				new Engine.Entity("directionalLight",{
+					pos: Vector(1,1,0.5).normalize(), 
+					color: 0xFFFFFF, 
+					intensity: 1.5
+				});
+				new Engine.Entity("pointLight",{pos: Vector(), color: 0xFFFFFF});
 				
 				world.startRender();
 				

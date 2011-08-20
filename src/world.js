@@ -31,7 +31,7 @@ Engine.World = function( args ){
 	}
 	
 	// Create a player entity for our main dude
-	this.me = new Engine.Player( { object: this.camera } );
+	this.me = new Engine.Entity( "player", { mesh: this.camera, name: "Will Crichton" } );
 	
 	// Setup the scene to place objects in
 	this.scene = new THREE.Scene();
@@ -84,90 +84,17 @@ Engine.World.prototype = {
 	// Basic wrapper function to add an entity to the scene
 	addEntity : function( obj ){ 
 	
-		this.scene.addChild( obj );
+		var mesh;
+		if( obj.isEntity ) mesh = obj.getMesh();
+		else mesh = obj;
+		
+		for( i in this.scene.objects )
+			if( this.scene.objects[i] === obj ) 
+				return false;
+			
+		this.scene.addChild( mesh );
+		return true;
 
-	},
-	
-	addBlock : function( args ){
-		
-		var block = new THREE.CubeGeometry( args.width, args.height, args.depth, args.segmentsWidth, args.segmentsHeight, args.segmentsDepth, args.materials, args.flipped, args.sides );
-		var material;
-		if( args.matObj ) 
-			material = args.matObj;
-		else 
-			material = new THREE.MeshFaceMaterial();
-		var mesh = new THREE.Mesh( block, material );		
-		mesh.position = args.pos || Vector(0,0,0);
-		this.addEntity( mesh );
-		
-		// Testing collisions? (IN PROGRESS)
-		THREE.Collisions.colliders.push( THREE.CollisionUtils.MeshOBB( mesh ) );
-		
-		return mesh;
-	},
-	
-	// Add a basic sphere
-	addSphere : function( args ){
-	
-		var sphere = new THREE.SphereGeometry( args.radius, args.segments, args.rings );
-		var material;
-		if( args.matObj ) 
-			material = args.matObj;
-		else 
-			material = new THREE.MeshFaceMaterial();
-		var mesh = new THREE.Mesh( sphere, material );
-		mesh.position = args.pos || Vector(0,0,0);
-		this.addEntity( mesh );
-		
-		THREE.Collisions.colliders.push( THREE.CollisionUtils.MeshOBB( mesh ) );
-		
-		return mesh;
-	
-	},
-	
-	addText : function( args ){
-	
-		var text = new THREE.TextGeometry( args.text, args );
-		var material;
-		if( args.matObj )
-			material = args.matObj;
-		else
-			material = new THREE.MeshFaceMaterial();
-		var mesh = new THREE.Mesh( text, material );
-		mesh.position = args.pos || Vector();
-		this.addEntity( mesh );
-		
-		//THREE.Collisions.colliders.push( THREE.CollisionUtils.MeshOBB( mesh ) );
-		
-		return mesh;
-		
-	},
-	
-	// Add a point light
-	addPointLight : function( pos, color ){
-		
-		var light = new THREE.PointLight( color || 0xFFFFFF );
-		light.position = pos || Vector(0,0,0);
-		this.scene.addLight( light );
-	
-	},
-	
-	// Add ambient light
-	addAmbientLight : function( color ){
-	
-		var ambientLight = new THREE.AmbientLight( color || 0xFFFFFF );
-		this.addEntity( ambientLight );
-
-	},
-	
-	// Add a directional light
-	addDirectionalLight : function( pos, color, intensity, distance ){
-		
-		var directionalLight = new THREE.DirectionalLight( color || 0xFFFFFF, intensity, distance );
-		directionalLight.position = pos;
-		directionalLight.position.normalize();
-		this.addEntity( directionalLight );
-		
 	},
 	
 	// Load a JSON map file (IN PROGRESS)
@@ -232,7 +159,7 @@ Engine.World.prototype = {
 	
 	addPlayer : function( args ){
 		
-		var newPlayer = new Engine.Player( args );
+		var newPlayer = new Engine.Entity( "player", args );
 		var model = this.addBlock({
 			width: 10, height: 10, depth: 10,
 			matObj: new THREE.MeshPhongMaterial({
@@ -299,7 +226,7 @@ Engine.World.prototype = {
 	thinkInternal : function(){
 		
 		// Send position updates to server
-		if(this.me && !this.me.getPos().equals(this.lastPosition)){
+		if(this.me && this.me.object && !this.me.getPos().equals(this.lastPosition)){
 			Engine.sendPacket(this.me.getPos().toString(),{ PacketType: 'position' });
 			this.lastPosition = this.me.getPos().clone();
 		}
