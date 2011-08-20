@@ -125,6 +125,24 @@ Engine.World.prototype = {
 	
 	},
 	
+	addText : function( args ){
+	
+		var text = new THREE.TextGeometry( args.text, args );
+		var material;
+		if( args.matObj )
+			material = args.matObj;
+		else
+			material = new THREE.MeshFaceMaterial();
+		var mesh = new THREE.Mesh( text, material );
+		mesh.position = args.pos || Vector();
+		this.addEntity( mesh );
+		
+		//THREE.Collisions.colliders.push( THREE.CollisionUtils.MeshOBB( mesh ) );
+		
+		return mesh;
+		
+	},
+	
 	// Add a point light
 	addPointLight : function( pos, color ){
 		

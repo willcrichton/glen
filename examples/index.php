@@ -17,6 +17,7 @@
 		<script src='engine/render.js'></script>
 		<script src='engine/camera.js'></script>
 		<script src='engine/world.js'></script>
+		<script type="text/javascript" src="fonts/helvetiker_regular.typeface.js"></script>
 		<script>
 			console.log("Initializing engine...");
 			Engine.Initialize( true );
@@ -51,20 +52,43 @@
 				planeMesh.rotation = Vector(-1 * Math.PI / 2,0,0);
 				world.addEntity( planeMesh );	
 				
+				var blocks = [];
 				for(var row = 0; row < 15; row++){
 					for(var col = 0; col < 15; col++){
-						world.addBlock({
+						var b = world.addBlock({
 							pos: Vector(1000 + row * 105, 50 + Math.random() * 500, 1000 + col * 105),
 							width: 100, height: 100, depth: 100,
 							matObj: new THREE.MeshPhongMaterial({
 								color: ColorRandom()
 							})
 						});
+						b.rising = Math.random() > 0.5;
+						blocks.push(b);
 					}
 				}
 				
 				world.addHook( 'mouseover', 'mouseOverTest', function( c ){
 					c.mesh.materials[0].opacity = 0.5;
+				});
+				
+				world.addHook( 'think', 'blockMoveTest', function(){
+					for(i in blocks){
+						var b = blocks[i];
+						var pos = b.position;
+						if(pos.y > 550){ b.rising = false; }
+						else if(pos.y < 50){ b.rising = true; }
+						b.position.y += (b.rising ? 1 : -1) * 5;
+					}
+				})
+				
+				world.addText({
+					text: "glengine",
+					pos: Vector(-100,50, 0),
+					curveSegments: 12,
+					height: 10,
+					matObj: new THREE.MeshPhongMaterial({
+						color: ColorRandom()
+					})
 				});
 				
 				world.addAmbientLight( 0xCCCCCC );

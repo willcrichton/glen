@@ -31,9 +31,6 @@ THREE.Vector3.prototype.equals = function(vector){
 	return (this.x == vector.x && this.y == vector.y && this.z == vector.z);
 }
 
-THREE.Vector3.prototype.clone = function(){
-	return Vector(this.x,this.y,this.z);
-}
 
 // Equivalent to PHP's print_r
 function print_r(theObj){
@@ -109,3 +106,11 @@ function serialize( obj ){
 	return newObj;
 }
 
+/*THREE.FirstPersonCamera.prototype.translate = function( distance, axis ){
+	this.matrix.rotateAxis( axis );
+
+	axis.multiplyScalar( distance )
+
+	this.position.addSelf( axis );
+	this.target.position.addSelf( axis );
+}*/

@@ -3,6 +3,19 @@
 * Contains Engine variable and initialization functions
 ******************************************************/
 
+/******************************************************************
+TO DO
+- Fix WebSockets... handshake won't work??
+- Better integrate entities/players
+
+IDEA DUMP
+- Physics, collision, gravity
+- Map Loader (Hammer style, using JSON)
+- Multiplayer support, including
+	- actual player models and updating
+	- chatting
+*****************************************************************`*/
+
 // Create the Engine array to store all functions
 var Engine = Engine || {
 	directory: 'engine/',
@@ -78,20 +91,8 @@ Engine.loadBar = function( val ){
 
 Engine.Initialize = function( debug ){
 		
-	this.connectToServer('ws://localhost:6967/3d/server.php');
+	this.connectToServer('ws://localhost:6962/3d/server.php');
 	if( debug ) console.log("Establishing connection...");
 	
 }
 
-/******************************************************************
-TO DO
-- texture tiling (e.g. floor)
-
-IDEA DUMP
-- Map Loader (Hammer style, using JSON)
-- Read /engine directory for files, don't put them in a stupid array
-- First person camera that doesn't suck
-- Multiplayer support, including
-	- player visibility
-	- chatting
-*****************************************************************`*/
