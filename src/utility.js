@@ -5,21 +5,15 @@
 
 // Cross-browser compatibility for requestAnimationFrame (used to update scene)
 if ( !window.requestAnimationFrame ) {
-
 	window.requestAnimationFrame = ( function() {
-
 		return window.webkitRequestAnimationFrame ||
 		window.mozRequestAnimationFrame ||
 		window.oRequestAnimationFrame ||
 		window.msRequestAnimationFrame ||
-		function( /* function FrameRequestCallback */ callback, /* DOMElement Element */ element ) {
-
+		function( callback, element ) {
 			window.setTimeout( callback, 1000 / 60 );
-
 		};
-
 	} )();
-
 }
 
 // Vector3 toString function for debugging
@@ -31,32 +25,12 @@ THREE.Vector3.prototype.equals = function(vector){
 	return (this.x == vector.x && this.y == vector.y && this.z == vector.z);
 }
 
-
-// Equivalent to PHP's print_r
-function print_r(theObj){
-  if(theObj.constructor == Array ||
-     theObj.constructor == Object){
-    document.write("<ul>")
-    for(var p in theObj){
-	  if(theObj.hasOwnProperty(theObj[p])){
-		  if(theObj[p].constructor == Array||
-			 theObj[p].constructor == Object){
-			document.write("<li>["+p+"] => "+typeof(theObj)+"</li>");
-			document.write("<ul>")
-			print_r(theObj[p]);
-			document.write("</ul>")
-		  } else {
-	document.write("<li>["+p+"] => "+theObj[p]+"</li>");
-		  }
-	  }
-    }
-    document.write("</ul>")
-  }
+THREE.Object3D.prototype.hasEntity = function(){
+	return typeof this.entity != "undefined";
 }
 
-// Simple insert function
-function insert( arr, obj ){
-	arr.push( obj );
+THREE.Object3D.prototype.getEntity = function(){
+	return this.entity;
 }
 
 // Slightly shorter vector initialization
@@ -72,15 +46,19 @@ function Vector(x,y,z){
 
 // RGB to hex color function
 function Color(r,g,b){
-	return parseInt(
+	//return parseInt(
 		(r < 16 ? "0" : "") + r.toString(16) + 
 		(g < 16 ? "0" : "") + g.toString(16) + 
 		(b < 16 ? "0" : "") + b.toString(16)
-	,16);
+	//,16);
 }
 
 function ColorRandom(){
-	return Color(Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255));
+	return Color(
+		Math.floor(Math.random() * 255),
+		Math.floor(Math.random() * 255), 
+		Math.floor(Math.random() * 255)
+	);
 }
 
 // Copy an object
@@ -105,12 +83,3 @@ function serialize( obj ){
 	}
 	return newObj;
 }
-
-/*THREE.FirstPersonCamera.prototype.translate = function( distance, axis ){
-	this.matrix.rotateAxis( axis );
-
-	axis.multiplyScalar( distance )
-
-	this.position.addSelf( axis );
-	this.target.position.addSelf( axis );
-}*/

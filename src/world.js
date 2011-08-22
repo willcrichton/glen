@@ -31,7 +31,9 @@ Engine.World = function( args ){
 	}
 	
 	// Create a player entity for our main dude
+	this.entities = [];
 	this.me = new Engine.Entity( "player", { mesh: this.camera, name: "Will Crichton" } );
+	this.entities.push( this.me );
 	
 	// Setup the scene to place objects in
 	this.scene = new THREE.Scene();
@@ -42,7 +44,8 @@ Engine.World = function( args ){
 	
 	// Put the renderer in the DOM, assuming we have a container
 	$(args.container || 'body').append( this.renderer.domElement );
-		
+	
+	// Misc hooks (put these somewhere else?)
 	this.mouse = { x: 0, y: 0 };
 	this.projector = new THREE.Projector();
 	var w = this;
@@ -52,11 +55,38 @@ Engine.World = function( args ){
 		w.mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 	});
 	
-	/* Current hooks:
-		mousehover - Called every frame the mouse hovers over a mesh
-		mouseover - Called once when mouseover, as opposed to every frame
-		render - Called before the scene is rendered
-		think - Called every frame
+	// Replace this with vanilla javascript?
+	$( document ).keypress(function(e){ w.callHook( 'KeyPress', e.which ) });
+	var clickHook = function( singleClick ){
+		var vector = new THREE.Vector3( w.mouse.x, w.mouse.y, 0.5 );
+		w.projector.unprojectVector( vector, w.camera );
+		var ray = new THREE.Ray( w.camera.position, vector.subSelf( w.camera.position ).normalize() );
+		var c = THREE.Collisions.rayCastNearest( ray );
+		if( c ){
+			if( c.mesh.hasEntity() ){
+				c.mesh.getEntity().callHook( singleClick ? 'Click' : 'DoubleClick', c.mesh.getEntity() );
+			}
+			w.callHook( singleClick ? 'Click' : 'DoubleClick', c.mesh.hasEntity() ? c.mesh.getEntity() : c.mesh );
+		}
+	}
+	$( document ).click(function(e){ clickHook( true ) });
+	$( document ).dblclick(function(e){ clickHook( false ) });
+	
+	/* Current global hooks:
+		MouseHover - Called every frame the mouse hovers over a mesh
+		MouseOver - Called once when mouseover, as opposed to every frame
+		Render - Called before the scene is rendered
+		Think - Called every frame
+		KeyPress - called on key press
+		Click - called on click entity
+		DoubleClick - called on double click entity
+		
+	   Current entity hooks:
+		MouseHover
+		MouseOver
+		Think
+		Click
+		DoubleClick
 	*/
 	this.hooks = {};
 		
@@ -64,12 +94,12 @@ Engine.World = function( args ){
 	
 	// Array of all players (minus this.me)
 	this.players = [];
-	
+
 	// see: think
 	this.lastPosition = Vector();
 	
 	// Add this object to the master list
-	insert(Engine.worlds,this);
+	Engine.worlds.push(this);
 }
 
 Engine.World.prototype = {
@@ -85,9 +115,15 @@ Engine.World.prototype = {
 	addEntity : function( obj ){ 
 	
 		var mesh;
-		if( obj.isEntity ) mesh = obj.getMesh();
-		else mesh = obj;
-		
+		if( obj.isEntity ){
+			mesh = obj.getMesh();
+			var hasEnt = false;
+			for( i in this.entities )
+				if( this.entities[i] == obj ) hasEnt = true;
+			if( !hasEnt )
+				this.entities.push( obj )
+		} else mesh = obj;
+	
 		for( i in this.scene.objects )
 			if( this.scene.objects[i] === obj ) 
 				return false;
@@ -95,6 +131,21 @@ Engine.World.prototype = {
 		this.scene.addChild( mesh );
 		return true;
 
+	},
+	
+	removeEntity : function( obj ){
+	
+		var mesh;
+		if( obj.isEntity ){
+			mesh = obj.getMesh();
+			for( i in this.entities ){
+				if( this.entities[i] == obj )
+					this.entities.splice( i, 1 );
+			}
+		} else mesh = obj;
+		
+		this.scene.removeChildRecurse( mesh );
+		
 	},
 	
 	// Load a JSON map file (IN PROGRESS)
@@ -170,6 +221,8 @@ Engine.World.prototype = {
 		
 		insert(this.players,newPlayer);
 		
+		return newPlayer;
+		
 	},
 	
 	packetReceivedInternal : function( data ){
@@ -190,7 +243,7 @@ Engine.World.prototype = {
 					break;
 					
 				case "new-player":
-					this.addPlayer( arr );
+					this.callHook( 'PlayerConnected', this.addPlayer( arr ) );
 					break;
 					
 				case "remove-player":
@@ -200,7 +253,9 @@ Engine.World.prototype = {
 							index = i; break;
 						}
 					}
+					var player = this.players[index];
 					this.players.splice(index,1);
+					this.callHook( 'PlayerDisconnected', player )
 					break;
 					
 				case "position":
@@ -211,7 +266,7 @@ Engine.World.prototype = {
 					break;
 					
 				default:
-					console.log('Invalid PacketType sent:',data.data);
+					console.log('Invalid PacketType received:',data.data);
 					break;
 					
 			}
@@ -237,14 +292,20 @@ Engine.World.prototype = {
 		var ray = new THREE.Ray( this.camera.position, vector.subSelf( this.camera.position ).normalize() );
 		var c = THREE.Collisions.rayCastNearest( ray );
 		if( c ){
-			this.callHook( 'mousehover', c );
-			if( this.mouseOver && this.mouseOver != c.mesh )
-				this.callHook( 'mouseover', c );
+			this.callHook( 'MouseHover', c );
+			if( c.mesh.hasEntity() )
+				c.mesh.getEntity().callHook( 'MouseHover', c );
+			if( this.mouseOver && this.mouseOver != c.mesh ){
+				this.callHook( 'MouseOver', c );
+				if( c.mesh.hasEntity() )
+					c.mesh.getEntity().callHook( 'MouseOver', c );
+			}
 			this.mouseOver = c.mesh;
 		}
 		
 		// Call other think hooks
-		this.callHook( 'think', this );
+		this.callHook( 'Think', this );
+		this.callHookOnEntities( 'Think', this );
 		
 	},
 	
@@ -259,14 +320,14 @@ Engine.World.prototype = {
 	
 	addHook : function( hook, name, func ){
 		
-		if( this.hooks[hook] ){
+		this.hooks[hook] = this.hooks[hook] || [];
+		if( typeof name == "function" ){
+			this.hooks[hook].push( name );
+		} else {
 			if( this.hooks[hook][name] )
 				throw new Error('Hook of type "' + hook + '" and name "' + name + '" already exist.');
 			else
-				this.hooks[hook][name] = func;
-		} else {
-			this.hooks[hook] = {};
-			this.addHook( hook, name, func );
+				this.hooks[hook][name] = func
 		}
 		
 	},
@@ -281,6 +342,13 @@ Engine.World.prototype = {
 			}
 		}
 		
-	}
+	},
+	
+	callHookOnEntities : function( hook ){
+	
+		for( i in this.entities )
+			this.entities[i].callHook( hook );
+			
+	},
 	
 }
