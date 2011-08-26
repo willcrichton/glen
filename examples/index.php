@@ -21,6 +21,7 @@
 		<script src="fonts/helvetiker_regular.typeface.js"></script>
 		<script>			
 			jQuery(document).ready(init);
+			Engine.connectToServer('ws://localhost:6961/3d/server.php');
 			
 			var world;
 			function init($){
@@ -35,14 +36,20 @@
 					camera: new THREE.FirstPersonCamera({
 						fov: 45, aspect: window.innerWidth / (window.innerHeight - 5), near: 1, far: 100000,
 						movementSpeed: 250, lookSpeed: 0.125, noFly: true, constrainVertical: true
-					})
+					}),
+					skybox: {
+						path: 'textures/cube/skybox/',
+						extension: '.jpg'
+					},
+					position: Vector(100,30,100),
+					fog: {
+						color: 0xFFE9AD,
+						distance: 0.00025
+					}
 				});
 				
-				world.me.setPos( Vector(100,30,100) );
 				world.camera.lat = Math.PI;
 				world.camera.lon = Math.PI / 2;
-				world.setSkybox('textures/cube/skybox/','.jpg');
-				world.enableFog( true, 0xFFE9AD, 0.00025 );
 				
 				new Engine.Entity( "plane", {
 					material: Engine.loadTexture( 'images/texture-grass3.jpg', [ 10000, 10000 ] ),
@@ -90,7 +97,7 @@
 				new Engine.Entity("pointLight",{pos: Vector(), color: 0xFFFFFF});
 				
 				world.startRender();
-				
+								
 			};
 		</script>
 	</head>

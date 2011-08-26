@@ -61,25 +61,37 @@ function ColorRandom(){
 	);
 }
 
-// Copy an object
-function clone(obj) {
-    if (null == obj || "object" != typeof obj) return obj;
-    var copy = obj.constructor();
-    for (var attr in obj) {
-        if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
-    }
-    return copy;
-}
-
-// Make an object writable as JSON?
-function serialize( obj ){
-	obj.domElement = undefined;
-	obj.parent = undefined;
-	//var newObj = JSON.decycle( obj );
-	var newObj = obj;
-	for( i in newObj ){
-		var type = typeof newObj[i];
-		if( type == 'function' || newObj[i] == null ) newObj[i] = undefined;
+timer = {
+	timers: [],
+	Create: function( name, delay, reps, func ){
+		var t = {
+			delay: delay,
+			reps: reps,
+			active: false,
+			func: func
+		};
+		this.timers[name] = t;
+		this.Run( name );
+	},
+	Simple: function( delay, func ){
+		var index = this.timers.push({
+			reps: 1,
+			delay: delay,
+			active: false,
+			func: func
+		});
+		this.Run( index -1 );
+	},
+	Run: function( name, runFunc ){
+		var t = this.timers[name];
+		if( t && t.reps >= 0 ){
+			t.reps--;
+			t.active = true;
+			if( runFunc )
+				t.func();
+			setTimeout( "timer.Run('" + name + "',true);", t.delay );
+		} else if( t ){
+			t.active = false;
+		}
 	}
-	return newObj;
 }

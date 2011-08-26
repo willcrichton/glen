@@ -7,6 +7,8 @@
 // Create a "World" object to hold all the fun things like cameras and scenes
 Engine.World = function( args ){
 	
+	args = args || {};
+	
 	// Setup the canvas to draw on
 	this.canvas = args.canvas || {
 		height: window.innerHeight,
@@ -34,6 +36,8 @@ Engine.World = function( args ){
 	this.entities = [];
 	this.me = new Engine.Entity( "player", { mesh: this.camera, name: "Will Crichton" } );
 	this.entities.push( this.me );
+	if( args.position ) 
+		this.me.setPos( args.position )
 	
 	// Setup the scene to place objects in
 	this.scene = new THREE.Scene();
@@ -72,6 +76,20 @@ Engine.World = function( args ){
 	$( document ).click(function(e){ clickHook( true ) });
 	$( document ).dblclick(function(e){ clickHook( false ) });
 	
+	var translateFunc = THREE.FirstPersonCamera.prototype.translate
+	var newTranslateFunc = function(b,c){
+		w.callHook( 'Move', w.me, w.me.getPos() );
+		translateFunc.call(this,b,c);
+	}
+	this.camera.translate = newTranslateFunc;
+	THREE.FirstPersonCamera.prototype.translate = newTranslateFunc;
+	
+	if( args.skybox )
+		this.setSkybox( args.skybox.path, args.skybox.extension );
+		
+	if( args.fog )
+		this.enableFog( true, args.fog.color, args.fog.distance );
+	
 	/* Current global hooks:
 		MouseHover - Called every frame the mouse hovers over a mesh
 		MouseOver - Called once when mouseover, as opposed to every frame
@@ -80,6 +98,7 @@ Engine.World = function( args ){
 		KeyPress - called on key press
 		Click - called on click entity
 		DoubleClick - called on double click entity
+		Move - called on player move
 		
 	   Current entity hooks:
 		MouseHover

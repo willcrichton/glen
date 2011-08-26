@@ -88,11 +88,3 @@ Engine.loadBar = function( val ){
 	});
 	
 }
-
-Engine.Initialize = function( debug ){
-		
-	//this.connectToServer('ws://localhost:6961/3d/server.php');
-	//if( debug ) console.log("Establishing connection...");
-	
-}
-
