@@ -23,6 +23,51 @@
 			jQuery(document).ready(init);
 			Engine.connectToServer('ws://localhost:6961/3d/server.php');
 			
+			function entDoor( args ){
+				
+				this.Open = false;
+				this.isRotating = false;
+								
+				this.Click = function(){
+					if( this.isRotating ) return;
+					var rotMul = 0.55;
+					var rotDelay = 0.05;
+					var rotFrames = 100;
+					if( this.Open ){
+						var ent = this;
+						var counter = 1;
+						timer.Create( 'rotTimer', rotDelay, rotFrames, function(){
+							counter++;
+							ent.setRotation( Vector(0,Math.PI / 2 - Math.PI / 2 * counter / rotFrames,0) );
+							var rot = Math.PI / 2 - Math.PI / 2 * counter / rotFrames
+							ent.setPos( ent.getPos().addSelf(
+								Vector( -Math.cos(rot) * rotMul, 0, Math.sin(rot) * rotMul ).multiplyScalar(-1)									
+							) );
+							ent.isRotating = counter -1 != rotFrames;
+						});
+						;
+					} else {
+						var ent = this;
+						var counter = 1;
+						timer.Create( 'rotTimer', rotDelay, rotFrames, function(){
+							counter++;
+							ent.setRotation( Vector(0,Math.PI / 2 * counter / rotFrames,0) );
+							var rot = Math.PI / 2 * counter / rotFrames
+							ent.setPos( ent.getPos().addSelf(
+								Vector( -Math.cos(rot) * rotMul, 0, Math.sin(rot) * rotMul )									
+							) );
+							ent.isRotating = counter - 1 != rotFrames;
+						});
+						
+					}
+					this.Open = !this.Open;
+				}
+				
+			}
+			Engine.registerEntity( "door", entDoor, "block", { width: 10, height: 100, depth: 80 } );
+			
+			Engine.registerEntity( "blueDoor", function(){}, "door", { material: ColorMaterial(0,0,200) } );
+			
 			var world;
 			function init($){
 				
@@ -66,7 +111,7 @@
 						var b = new Engine.Entity( "block", {
 							pos: Vector( 1500 + Math.cos(Math.PI / 180 * i * blockMul) * ringMul, 50 + Math.sin(Math.PI / 180 * i * blockMul) * ringMul, 500 + rings * 60  ),
 							width: 20, height: 20, depth: 20,
-							material: new THREE.MeshPhongMaterial({ color: 0xFFFFFF / rings })
+							material: new THREE.MeshPhongMaterial({ color: Color( 255 * ( 1 - rings / 4 ), 255 * ( 1 - rings / 4 ), 255 * ( 1 - rings / 4 ) ) })
 						});
 						b.iVal = i;
 						b.blockMul = blockMul;
@@ -74,12 +119,16 @@
 						b.Think = function(){
 							var pos = this.getPos();
 							pos.x = 1500 + Math.cos( Math.PI / 180 * (this.iVal * this.blockMul + time) ) * this.ringMul;
-							pos.y = 500 + Math.sin( Math.PI / 180 * (this.iVal * this.blockMul + time) ) * this.ringMul;
+							pos.y = 550 + Math.sin( Math.PI / 180 * (this.iVal * this.blockMul + time) ) * this.ringMul;
 							this.setPos( pos );
 						}
 					}
 				}
-
+				
+				var door = new Engine.Entity( "door", {
+					pos: Vector(-100,50,100)
+				});
+				
 				new Engine.Entity( "text", {
 					text: "glengine",
 					pos: Vector(-100,50, -100),
@@ -94,8 +143,7 @@
 					color: 0xFFFFFF, 
 					intensity: 1.5
 				});
-				new Engine.Entity("pointLight",{pos: Vector(), color: 0xFFFFFF});
-				
+	
 				world.startRender();
 								
 			};

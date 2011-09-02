@@ -15,6 +15,18 @@ Engine.Entity = function( args ){
 		args = argList[0];
 		if( argList[1] )
 			worldToAdd = argList[1];
+			
+		var ext = Engine.entityExtenders[this.entType];
+		var funcQueue = [];
+		while( ext ){
+			funcQueue.push( ext );
+			args = $.extend( ext.args, args  );
+			ext = Engine.entityExtenders[ ext.extend ];
+		}
+		for( var i = funcQueue.length - 1; i >= 0; i-- ){
+			var extension = funcQueue[i];
+			Engine.entityList[ extension.extend ].call(this,args);
+		}
 		var retMesh = Engine.entityList[this.entType].call(this,args);
 		if( retMesh )
 			this.setMesh( retMesh );
@@ -41,14 +53,8 @@ Engine.Entity = function( args ){
 
 Engine.Entity.prototype = {
 
-	getPos: function(){
-		if( this.getMesh() )
-			return this.getMesh().position.clone();
-	},
-	
-	setPos: function( vector ){
-		if( this.getMesh() )
-			this.getMesh().position = vector.clone();
+	getType: function(){
+		return this.entType || "entity"
 	},
 	
 	getMesh: function(){
@@ -59,9 +65,33 @@ Engine.Entity.prototype = {
 		this.mesh = mesh;
 		mesh.entity = this;
 	},
-
-	getType: function(){
-		return this.entType || "entity"
+	
+	getPos: function(){
+		return this.getMesh().position.clone();
+	},
+	
+	setPos: function( vector ){
+		this.getMesh().position = vector.clone();
+	},
+	
+	getRotation: function(){
+		return this.getMesh().rotation.clone();
+	},
+	
+	setRotation: function( vector ){
+		this.getMesh().rotation = vector.clone()
+	},
+	
+	rotate: function( vector ){
+		this.setRotation( this.getRotation().addSelf(vector) )
+	},
+	
+	getMaterial: function(){
+		return this.getMesh().materials[0];
+	},
+	
+	setMaterial: function(material){
+		this.getMesh().materials[0] = material;
 	},
 	
 	callHook: function( hook ){
@@ -84,9 +114,15 @@ Engine.Entity.prototype.getObject = Engine.Entity.prototype.getMesh;
 Engine.Entity.prototype.setObject = Engine.Entity.prototype.setMesh;
 
 Engine.entityList = {};
-Engine.registerEntity = function( name, func ){
+Engine.entityExtenders = {};
+Engine.registerEntity = function( name, func, extendEnt, args ){
 
 	Engine.entityList[name] = func;
+	if( extendEnt )
+		Engine.entityExtenders[name] = {
+			extend: extendEnt,
+			args: args
+		}
 	
 }
 
@@ -187,6 +223,7 @@ var pointLightEnt = function( args ){
 
 	var light = new THREE.PointLight( args.color || 0xFFFFFF );
 	light.position = args.pos || Vector(0,0,0);
+	light.intensity = args.intensity;
 	
 	return light;
 	

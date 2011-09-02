@@ -33,6 +33,24 @@ THREE.Object3D.prototype.getEntity = function(){
 	return this.entity;
 }
 
+THREE.FirstPersonCamera.prototype.translate = function ( distance, axis ) {
+
+	this.matrix.rotateAxis( axis );
+
+	if ( this.noFly ) {
+
+		axis.y = 0;
+
+	}
+
+	var ray = new THREE.Ray( this.position, axis );
+	var c = THREE.Collisions.rayCastNearest( ray );
+	
+	this.position.addSelf( axis.multiplyScalar( distance ) );
+	this.target.position.addSelf( axis.multiplyScalar( distance ) );
+
+};
+
 // Slightly shorter vector initialization
 function Vector(x,y,z){
 	if(x == undefined)
@@ -46,11 +64,12 @@ function Vector(x,y,z){
 
 // RGB to hex color function
 function Color(r,g,b){
-	//return parseInt(
+	r = Math.floor(r); g = Math.floor(g); b = Math.floor(b);
+	return parseInt(
 		(r < 16 ? "0" : "") + r.toString(16) + 
 		(g < 16 ? "0" : "") + g.toString(16) + 
 		(b < 16 ? "0" : "") + b.toString(16)
-	//,16);
+	,16);
 }
 
 function ColorRandom(){
@@ -59,6 +78,15 @@ function ColorRandom(){
 		Math.floor(Math.random() * 255), 
 		Math.floor(Math.random() * 255)
 	);
+}
+
+function ColorMaterial( r, g, b ){
+	var color;
+	if( typeof r != "number" ) 
+		color = r;
+	else
+		color = Color( r, g, b );
+	return new THREE.MeshPhongMaterial({ color: color });
 }
 
 timer = {
