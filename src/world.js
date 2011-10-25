@@ -29,7 +29,7 @@ Engine.World = function( args ){
 			);
 		}
 	} else {
-		this.camera = new THREE.Camera( 60, this.canvas.width / this.canvas.height, 1, 10000 );
+		this.camera = new THREE.Camera( 60, this.canvas.width / this.canvas.height, 1, 100000 );
 	}
 	
 	// Create a player entity for our main dude
@@ -43,20 +43,22 @@ Engine.World = function( args ){
 	this.scene = new THREE.Scene();
 	
 	// Create a renderer to draw the Scene in the canvas
-	this.renderer = new THREE.WebGLRenderer();
+	this.renderer = new THREE.WebGLRenderer({antialias:true});
 	this.renderer.setSize( this.canvas.width, this.canvas.height );
 	
 	// Put the renderer in the DOM, assuming we have a container
 	$(args.container || 'body').append( this.renderer.domElement );
 	
 	// Misc hooks (put these somewhere else?)
-	this.mouse = { x: 0, y: 0 };
+	this.mouse = { x: 0, y: 0, mouseX: 0, mouseY: 0 };
 	this.projector = new THREE.Projector();
 	var w = this;
 	$( this.renderer.domElement ).mousemove(function(e){
-		e.preventDefault();
 		w.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 		w.mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+		
+		w.mouse.mouseX = event.clientX - window.innerWidth / 2;
+		w.mouse.mouseY = event.clientY - window.innerHeight / 2;
 	});
 	
 	// Replace this with vanilla javascript?
@@ -76,13 +78,15 @@ Engine.World = function( args ){
 	$( document ).click(function(e){ clickHook( true ) });
 	$( document ).dblclick(function(e){ clickHook( false ) });
 	
-	var translateFunc = THREE.FirstPersonCamera.prototype.translate
-	var newTranslateFunc = function(b,c){
-		w.callHook( 'Move', w.me, w.me.getPos() );
-		translateFunc.call(this,b,c);
+	if( this.camera && this.camera.movementSpeed ){
+		var translateFunc = THREE.FirstPersonCamera.prototype.translate
+		var newTranslateFunc = function(b,c){
+			w.callHook( 'Move', w.me, w.me.getPos() );
+			translateFunc.call(this,b,c);
+		}
+		this.camera.translate = newTranslateFunc;
+		THREE.FirstPersonCamera.prototype.translate = newTranslateFunc;
 	}
-	this.camera.translate = newTranslateFunc;
-	THREE.FirstPersonCamera.prototype.translate = newTranslateFunc;
 	
 	if( args.skybox )
 		this.setSkybox( args.skybox.path, args.skybox.extension );

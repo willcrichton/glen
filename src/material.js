@@ -1,4 +1,4 @@
-Engine.loadTexture = function( path, repeat ) {
+Engine.loadTexture = function( path, repeat, opts ) {
 
 	var image = new Image();
 	image.onload = function () { 
@@ -10,6 +10,8 @@ Engine.loadTexture = function( path, repeat ) {
 
 	var texture  = new THREE.Texture( image, new THREE.UVMapping(), THREE.RepeatWrapping, THREE.RepeatWrapping, THREE.NearestFilter, THREE.LinearMipMapLinearFilter );
 	
-	return new THREE.MeshLambertMaterial( { map: texture } );
+	return new THREE.MeshLambertMaterial( $.merge({ map: texture },opts || {}) );
 
 }
+
+

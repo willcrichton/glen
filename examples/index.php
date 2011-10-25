@@ -16,12 +16,11 @@
 		<script src='engine/material.js'></script>
 		<script src='engine/entity.js'></script>
 		<script src='engine/render.js'></script>
-		<script src='engine/camera.js'></script>
 		<script src='engine/world.js'></script>
 		<script src="fonts/helvetiker_regular.typeface.js"></script>
 		<script>			
 			jQuery(document).ready(init);
-			Engine.connectToServer('ws://localhost:6961/3d/server.php');
+			//Engine.connectToServer('ws://localhost:6955/3d/server.php');
 			
 			function entDoor( args ){
 				
@@ -65,7 +64,6 @@
 				
 			}
 			Engine.registerEntity( "door", entDoor, "block", { width: 10, height: 100, depth: 80 } );
-			
 			Engine.registerEntity( "blueDoor", function(){}, "door", { material: ColorMaterial(0,0,200) } );
 			
 			var world;
@@ -143,11 +141,34 @@
 					color: 0xFFFFFF, 
 					intensity: 1.5
 				});
+				
+				var loader = new THREE.JSONLoader();
+				var guy = new Engine.Entity( "model", { model: "objects/Male02_slim.js" } );
+				var mesh = guy.getMesh();
+				mesh.scale.x = mesh.scale.y = mesh.scale.z = 0.2;
 	
 				world.startRender();
 								
 			};
+			
+			function processChat(f){
+				var val = $(f.chat).attr("value"), text = $('#chatText');
+				var size = text.find('.chatMessage').size();
+				if(size == 11)
+					text.css('padding-right','10px');
+				else if(size == 30)
+					$(text.find('.chatMessage').get(0)).remove();
+				text.append('<div class="chatMessage"><b>Will: </b>' + val + '</div>');
+				return false;
+			}
 		</script>
 	</head>
-	<body></body>
+	<body>
+		<div id="chatBox">
+			<div id="chatText"></div>
+			<form onsubmit="return processChat(this)">
+				<input type="text" id="chatInput" name="chat" />
+			</form>
+		</div>
+	</body>
 </html>

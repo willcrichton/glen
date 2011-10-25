@@ -62,6 +62,14 @@ function Vector(x,y,z){
 		return new THREE.Vector3(x,y,z);
 }
 
+function VectorRandom(){
+	return Vector(
+		(Math.random() > 0.5 ? -1 : 1) * Math.random(),
+		(Math.random() > 0.5 ? -1 : 1) * Math.random(),
+		(Math.random() > 0.5 ? -1 : 1) * Math.random()
+	);
+}
+
 // RGB to hex color function
 function Color(r,g,b){
 	r = Math.floor(r); g = Math.floor(g); b = Math.floor(b);
@@ -87,6 +95,16 @@ function ColorMaterial( r, g, b ){
 	else
 		color = Color( r, g, b );
 	return new THREE.MeshPhongMaterial({ color: color });
+}
+
+function loadModel( model, callback ){
+	var loader = new THREE.JSONLoader();
+	loader.load({ model: model, callback: callback });
+}
+
+function unique(){
+	var d = new Date();
+	return d.getTime();
 }
 
 timer = {
@@ -121,5 +139,8 @@ timer = {
 		} else if( t ){
 			t.active = false;
 		}
+	},
+	Remove: function( name ){
+		this.timers[name] = undefined;
 	}
 }

@@ -251,3 +251,18 @@ var ambientLightEnt = function( args ){
 	
 }
 Engine.registerEntity( "ambientLight", ambientLightEnt );
+
+var modelEnt = function( args ){
+	
+	var loader = new THREE.JSONLoader();
+	var ent = this;
+	loader.load( { model: args.model, callback: function( geometry ){
+		var mesh = new THREE.Mesh( geometry, new THREE.MeshFaceMaterial() );
+		ent.setMesh( mesh );
+		world.scene.addObject( mesh );
+	} } );
+	
+	return new THREE.Mesh( new THREE.Geometry(), new THREE.MeshFaceMaterial() );
+	
+}
+Engine.registerEntity( "model", modelEnt );
