@@ -5,6 +5,7 @@ GLEngine is a game-oriented javascript framework for developers using WebGL, aim
 
 ### Features ###
 Features include (or will soon include):  
+
 * Intuitive setup (make a world, add entities)
 * Convenient "entity" system
 * "Hook" system to handle world-scale and entity-scale events
@@ -12,6 +13,7 @@ Features include (or will soon include):
 * Useful utility functions (e.g. simple vectors, colors)
 
 Planned features include (?):  
+
 * Voice chat
 * Map loading and creating
 * FPS-style first person camera (...if mouse locking ever becomes available)
