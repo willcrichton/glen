@@ -2,9 +2,6 @@
 
 require_once("websocket.class.php");
 
-error_reporting(E_ALL);
-set_time_limit(0);
-ob_implicit_flush();
 
 class ServerControl extends WebSocket {
 	
@@ -13,7 +10,7 @@ class ServerControl extends WebSocket {
 	// This gets an array of headers sent in the packet.
 	// Headers must be of format 
 	//		HeaderName: HeaderValue
-	// "content" is a reserved header name. It holds the message body.
+	// "content" is a reserved header name. It holds the message body in the array that is returned.
 	function get_packet_headers($msg){
 		$ret = array( 'content' => '' );
 		$isContent = false;
@@ -71,8 +68,11 @@ class ServerControl extends WebSocket {
 							break;
 					endswitch;
 				else:
-					foreach($this->users as $u)
-						$u->send("User $user->id says: $content");
+					$packet = $this->buildPacket('chat',array(
+						'name' => $user->id,
+						'message' => $content
+					));
+					$this->sendAll($packet);
 				endif;
 				break;
 			case 'disconnect':
@@ -80,8 +80,8 @@ class ServerControl extends WebSocket {
 				break;
 			case 'position':
 				$packet = $this->buildPacket('position',array(
-					id => $user->id,
-					position => $content
+					'id' => $user->id,
+					'position' => $content
 				));
 				foreach($this->users as $u)
 					if($u->id != $user->id)
@@ -94,28 +94,24 @@ class ServerControl extends WebSocket {
 	}
 	
 	function onConnect($user){
-		// Send empty packet to avoid WebSocket bug. Find out how to fix this?
-		$user->send('');
 		
-		// Send the player the data of all the players (and hisself is isMe is true)
-		$data = array( 'PacketType' => 'load-players', 'data' => array() );
-		foreach($this->users as $u):
-			$data['data'][] = array(
-				'id' => $u->id,
-				'isMe' => $u->id == $user->id
-			);
-		endforeach;
-		$user->send(json_encode($data));
+		if(count($this->users) > 1):
+			// Send the player the data of all the players
+			$data = array();
+			foreach($this->users as $u):
+				if($u->id != $user->id)
+					$data[] = array(
+						'id' => $u->id,
+					);
+			endforeach;
+			$user->send($this->buildPacket('load-players',$data));
 		
-		// Send the new player's data to all of the other players
-		$data = json_encode(array(
-			'PacketType' => 'new-player',
-			'data' => array('id' => $user->id)
-		));
-		foreach($this->users as $u)
-			if($u->id != $user->id)
-				$u->send($data);
-	
+			// Send the new player's data to all of the other players
+			$packet = $this->buildPacket('new-player', array('id' => $user->id) );
+			foreach($this->users as $u)
+				if($u->id != $user->id)
+					$u->send($packet);
+		endif;
 	}
 	
 	function onDisconnect($user){
@@ -131,17 +127,21 @@ class ServerControl extends WebSocket {
 	function error($message,$extra=array()){
 		$err = array( 'error' => $message );
 		$err = array_merge( $err, $extra );
-		return json_encode( $err );
+		return $this->buildPacket('error', $err );
 	}
 	
 	function buildPacket($type='misc',$data=array()){
 		return json_encode(array(
-			PacketType => $type,
-			data => $data
+			'PacketType' => $type,
+			'data' => $data
 		));
+	}
+	
+	function sendAll($packet){
+		foreach($this->users as $u) $u->send($packet);
 	}
 }
 
-$master = new ServerControl("localhost",6967);
+$master = new ServerControl("localhost",6932);
 
 ?>
