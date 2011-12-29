@@ -25,7 +25,7 @@
 				/*** WebGL rendering mumbo jumbo ***/
 				
 				// Set up world to render in 
-				world = new Engine.World({
+				world = new Glen.World({
 					canvas: {
 						height: window.innerHeight - 5,
 						width: window.innerWidth 
@@ -51,7 +51,7 @@
 					blocks = [];
 					for( var i = 0; i < width; i++ ){
 						// Create new block and add to spectrum
-						var b = new Engine.Entity("block",{
+						var b = new Glen.Entity("block",{
 							width: 100, height: 100, depth: 100,
 							material: ColorMaterial(Color(255 * (1 - i / specWidth),255 * i / specWidth,0)),
 							pos: Vector(-100 * 25 + i * 100,-1000,0)
@@ -62,8 +62,8 @@
 				genBlocks(specWidth);
 				
 				// Lighting
-				new Engine.Entity("ambientLight",{color: 0xCCCCCC});
-				new Engine.Entity("directionalLight",{
+				new Glen.Entity("ambientLight",{color: 0xCCCCCC});
+				new Glen.Entity("directionalLight",{
 					pos: Vector(1,1,0.5).normalize(), 
 					color: 0xCCCCCC, 
 					intensity: 1.5

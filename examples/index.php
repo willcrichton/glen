@@ -20,13 +20,13 @@
 		<script src="fonts/helvetiker_regular.typeface.js"></script>
 		<script>			
 			jQuery(document).ready(init);
-			Engine.connectToServer('ws://localhost:6932/3d/server.php');
+			Glen.connectToServer('ws://localhost:6932/3d/server.php');
 	
 			var world;
 			function init($){
 				
 				console.log('Loading world...');
-				world = new Engine.World({
+				world = new Glen.World({
 					canvas: {
 						height: window.innerHeight - 5,
 						width: window.innerWidth 
@@ -50,13 +50,13 @@
 				world.camera.lat = Math.PI;
 				world.camera.lon = Math.PI / 2;
 				
-				new Engine.Entity( "plane", {
-					material: Engine.loadTexture( 'images/texture-grass3.jpg', [ 10000, 10000 ] ),
+				new Glen.Entity( "plane", {
+					material: Glen.loadTexture( 'images/texture-grass3.jpg', [ 10000, 10000 ] ),
 					width: 10000,
 					length: 10000
 				});
 				
-				new Engine.Entity( "text", {
+				new Glen.Entity( "text", {
 					text: "glengine",
 					pos: Vector(-100,50, -100),
 					curveSegments: 12,
@@ -64,8 +64,8 @@
 					material: new THREE.MeshPhongMaterial({ color: ColorRandom() })
 				});
 				
-				new Engine.Entity("ambientLight",{color: 0xCCCCCC});
-				new Engine.Entity("directionalLight",{
+				new Glen.Entity("ambientLight",{color: 0xCCCCCC});
+				new Glen.Entity("directionalLight",{
 					pos: Vector(1,1,0.5).normalize(), 
 					color: 0xFFFFFF, 
 					intensity: 1.5

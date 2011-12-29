@@ -5,7 +5,7 @@
 ******************************************************/
 
 // Create a "World" object to hold all the fun things like cameras and scenes
-Engine.World = function( args ){
+Glen.World = function( args ){
 	
 	args = args || {};
 	
@@ -35,7 +35,7 @@ Engine.World = function( args ){
 	// Create a player entity for our main dude
 	this.entities = [];
 	this.players = [];
-	this.me = new Engine.Entity( "player", { mesh: this.camera, name: "Myself" } );
+	this.me = new Glen.Entity( "player", { mesh: this.camera, name: "Myself" } );
 	this.players.push( this.me );
 	this.entities.push( this.me );
 	if( args.position ) 
@@ -119,15 +119,15 @@ Engine.World = function( args ){
 	this.lastPosition = Vector();
 	
 	// Add this object to the master list
-	Engine.worlds.push(this);
+	Glen.worlds.push(this);
 }
 
-Engine.World.prototype = {
+Glen.World.prototype = {
 	
 	// Begin rendering the world -- you MUST call this in order to have anything happen
 	startRender : function(){
 	
-		Engine.animateWorld( this );
+		Glen.animateWorld( this );
 		
 	},
 	
@@ -232,7 +232,7 @@ Engine.World.prototype = {
 	
 	addPlayer : function( args ){
 		
-		var newPlayer = new Engine.Entity( "player", args );	
+		var newPlayer = new Glen.Entity( "player", args );	
 		this.entities.push(newPlayer);
 		this.players.push(newPlayer);
 		
@@ -307,7 +307,7 @@ Engine.World.prototype = {
 		
 		// Send position updates to server
 		if(this.me && this.me.object && !this.me.getPos().equals(this.lastPosition)){
-			Engine.sendPacket(this.me.getPos().toString(),{ PacketType: 'position' });
+			Glen.sendPacket(this.me.getPos().toString(),{ PacketType: 'position' });
 			this.lastPosition = this.me.getPos().clone();
 		}
 		

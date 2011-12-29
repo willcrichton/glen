@@ -4,10 +4,10 @@
 * client communication.
 ******************************************************/
 
-Engine.packetHeaderEnd = "~END~";
-Engine.packetDelimeter = "\r\n";
+Glen.packetHeaderEnd = "~END~";
+Glen.packetDelimeter = "\r\n";
 
-Engine.sendPacket = function(content, headers){
+Glen.sendPacket = function(content, headers){
 	if(!this.connected)
 		return false;
 	
@@ -17,7 +17,7 @@ Engine.sendPacket = function(content, headers){
 		this.socket.send(this.buildPacket(content,headers));
 }
 
-Engine.buildPacket = function(content,headers){
+Glen.buildPacket = function(content,headers){
 	var packet = '';
 	for(key in headers)
 		packet += key + ": " + headers[key] + this.packetDelimeter;
@@ -27,7 +27,7 @@ Engine.buildPacket = function(content,headers){
 	return packet;
 }
 
-Engine.say = function(message){
+Glen.say = function(message){
 	this.socket.send(
 		this.buildPacket(message,{
 			PacketType: 'chat'

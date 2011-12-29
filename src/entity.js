@@ -5,7 +5,7 @@
 
 // Takes three args: name, map of options, optional world to specifically add to
 // BUG: entities which derive from other entities are overriding each other when created more than once (e.g. player derived from block overwrote other player)
-Engine.Entity = function( args ){	
+Glen.Entity = function( args ){	
 		
 	args = args || {};
 		
@@ -17,18 +17,18 @@ Engine.Entity = function( args ){
 		if( argList[1] )
 			worldToAdd = argList[1];
 			
-		var ext = Engine.entityExtenders[this.entType];
+		var ext = Glen.entityExtenders[this.entType];
 		var funcQueue = [];
 		while( ext ){
 			funcQueue.push( ext );
 			args = $.extend( ext.args, args  );
-			ext = Engine.entityExtenders[ ext.extend ];
+			ext = Glen.entityExtenders[ ext.extend ];
 		}
 		for( var i = funcQueue.length - 1; i >= 0; i-- ){
 			var extension = funcQueue[i];
-			Engine.entityList[ extension.extend ].call(this,args);
+			Glen.entityList[ extension.extend ].call(this,args);
 		}
-		var retMesh = Engine.entityList[this.entType].call(this,args);
+		var retMesh = Glen.entityList[this.entType].call(this,args);
 		if( retMesh )
 			this.setMesh( retMesh );
 	} 
@@ -42,8 +42,8 @@ Engine.Entity = function( args ){
 		worldToAdd.addEntity( this );
 		this.worlds.push( worldToAdd );
 	} else {
-		for( i in Engine.worlds ) {
-			var w = Engine.worlds[i];
+		for( i in Glen.worlds ) {
+			var w = Glen.worlds[i];
 			w.addEntity( this );
 			this.worlds.push( w );
 		}
@@ -52,7 +52,7 @@ Engine.Entity = function( args ){
 	
 }
 
-Engine.Entity.prototype = {
+Glen.Entity.prototype = {
 
 	getType: function(){
 		return this.entType || "entity"
@@ -111,16 +111,16 @@ Engine.Entity.prototype = {
 	
 }
 
-Engine.Entity.prototype.getObject = Engine.Entity.prototype.getMesh;
-Engine.Entity.prototype.setObject = Engine.Entity.prototype.setMesh;
+Glen.Entity.prototype.getObject = Glen.Entity.prototype.getMesh;
+Glen.Entity.prototype.setObject = Glen.Entity.prototype.setMesh;
 
-Engine.entityList = {};
-Engine.entityExtenders = {};
-Engine.registerEntity = function( name, func, extendEnt, args ){
+Glen.entityList = {};
+Glen.entityExtenders = {};
+Glen.registerEntity = function( name, func, extendEnt, args ){
 
-	Engine.entityList[name] = func;
+	Glen.entityList[name] = func;
 	if( extendEnt )
-		Engine.entityExtenders[name] = {
+		Glen.entityExtenders[name] = {
 			extend: extendEnt,
 			args: args
 		}
@@ -147,7 +147,7 @@ var blockEnt = function( args ){
 	this.setMesh(mesh);
 	
 }
-Engine.registerEntity( "block", blockEnt );
+Glen.registerEntity( "block", blockEnt );
 
 
 
@@ -164,11 +164,11 @@ var playerEnt = function( args ){
 	this.id = args.id || '0';
 	
 	this.say = function( message ){
-		Engine.say( message )
+		Glen.say( message )
 	}
 	
 }
-Engine.registerEntity( "player", playerEnt );
+Glen.registerEntity( "player", playerEnt );
 
 
 
@@ -188,7 +188,7 @@ var sphereEnt = function( args ){
 	this.setMesh(mesh);
 
 }
-Engine.registerEntity( "sphere", sphereEnt );
+Glen.registerEntity( "sphere", sphereEnt );
 
 
 var planeEnt = function( args ){
@@ -206,7 +206,7 @@ var planeEnt = function( args ){
 	return planeMesh;
 
 }
-Engine.registerEntity( "plane", planeEnt );
+Glen.registerEntity( "plane", planeEnt );
 
 
 var textEnt = function( args ){
@@ -225,7 +225,7 @@ var textEnt = function( args ){
 	return mesh;
 	
 }
-Engine.registerEntity( "text", textEnt );
+Glen.registerEntity( "text", textEnt );
 
 
 var pointLightEnt = function( args ){
@@ -237,7 +237,7 @@ var pointLightEnt = function( args ){
 	return light;
 	
 }
-Engine.registerEntity( "pointLight", pointLightEnt );
+Glen.registerEntity( "pointLight", pointLightEnt );
 
 
 var directionalLightEnt = function( args ){
@@ -249,7 +249,7 @@ var directionalLightEnt = function( args ){
 	return directionalLight;
 	
 }
-Engine.registerEntity( "directionalLight", directionalLightEnt );
+Glen.registerEntity( "directionalLight", directionalLightEnt );
 
 
 var ambientLightEnt = function( args ){
@@ -259,7 +259,7 @@ var ambientLightEnt = function( args ){
 	return ambientLight;
 	
 }
-Engine.registerEntity( "ambientLight", ambientLightEnt );
+Glen.registerEntity( "ambientLight", ambientLightEnt );
 
 
 
@@ -276,4 +276,4 @@ var modelEnt = function( args ){
 	return new THREE.Mesh( new THREE.Geometry(), new THREE.MeshFaceMaterial() );
 	
 }
-Engine.registerEntity( "model", modelEnt );
+Glen.registerEntity( "model", modelEnt );

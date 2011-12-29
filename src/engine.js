@@ -1,6 +1,6 @@
 /******************************************************
 * engine.js
-* Contains Engine variable and initialization functions
+* Contains Glen variable and initialization functions
 ******************************************************/
 
 /******************************************************************
@@ -16,8 +16,8 @@ IDEA DUMP
 	- chatting
 *****************************************************************`*/
 
-// Create the Engine array to store all functions
-var Engine = Engine || {
+// Create the Glen array to store all functions
+var Glen = Glen || {
 	directory: 'engine/',
 	include: [
 		'lib/Three.js',
@@ -35,7 +35,7 @@ var Engine = Engine || {
 	worlds: []
 };
 
-Engine.loadScript = function( script ){
+Glen.loadScript = function( script ){
 	
 	var script = document.createElement('script');
 	script.type = 'text/javascript';
@@ -44,7 +44,7 @@ Engine.loadScript = function( script ){
 	
 }
 
-Engine.loadScripts = function( arr ){
+Glen.loadScripts = function( arr ){
 
 	for( index in arr ){
 		this.loadScript( arr[index] );
@@ -52,23 +52,23 @@ Engine.loadScripts = function( arr ){
 
 }
 
-Engine.connectToServer = function( host ){
+Glen.connectToServer = function( host ){
 
 	host = host || 'ws://localhost/';
 	try {
 		this.socket = new WebSocket(host);
 		this.socket.onopen = function(){
 			console.log('Connection established to ' + host);
-			Engine.connected = true;
+			Glen.connected = true;
 		}
 		this.socket.onmessage = function(data){
-			for(var i = 0; i < Engine.worlds.length; i++){
-				Engine.worlds[i].packetReceivedInternal( data );
+			for(var i = 0; i < Glen.worlds.length; i++){
+				Glen.worlds[i].packetReceivedInternal( data );
 			}
 		}
 		this.socket.onclose = function(){
 			console.log("Connection closing.");
-			Engine.connected = false;
+			Glen.connected = false;
 		}
 	}
 	catch( e ) {
@@ -77,7 +77,7 @@ Engine.connectToServer = function( host ){
 	
 }
 
-Engine.loadBar = function( val ){
+Glen.loadBar = function( val ){
 	
 	if($('.loadBar').length == 0)
 		$('body').append('<div class="loadBar"></div>');

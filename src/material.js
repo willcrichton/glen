@@ -1,4 +1,4 @@
-Engine.loadTexture = function( path, repeat, opts ) {
+Glen.loadTexture = function( path, repeat, opts ) {
 
 	var image = new Image();
 	image.onload = function () { 

@@ -23,7 +23,7 @@
 			function init($){
 				
 				console.log('Loading world...');
-				world = new Engine.World({
+				world = new Glen.World({
 					canvas: {
 						height: window.innerHeight - 5,
 						width: window.innerWidth 
@@ -59,13 +59,13 @@
 				
 				sparkle( Vector( 0, 0, 20 ) );
 				
-				new Engine.Entity( "directionalLight", {
+				new Glen.Entity( "directionalLight", {
 					pos: Vector(0,0,1).normalize(), 
 					color: 0xFFFFFF, 
 					intensity: 1.5
 				});
 				
-				new Engine.Entity( "ambientLight", { color: 0xCCCCCC } );
+				new Glen.Entity( "ambientLight", { color: 0xCCCCCC } );
 	
 				world.startRender();
 								
