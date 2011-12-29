@@ -58,12 +58,12 @@ Engine.connectToServer = function( host ){
 	try {
 		this.socket = new WebSocket(host);
 		this.socket.onopen = function(){
-			console.log('Connection established.');
+			console.log('Connection established to ' + host);
 			Engine.connected = true;
 		}
 		this.socket.onmessage = function(data){
 			for(var i = 0; i < Engine.worlds.length; i++){
-				Engine.worlds[i].packetReceived( data );
+				Engine.worlds[i].packetReceivedInternal( data );
 			}
 		}
 		this.socket.onclose = function(){

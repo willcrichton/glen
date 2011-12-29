@@ -34,7 +34,9 @@ Engine.World = function( args ){
 	
 	// Create a player entity for our main dude
 	this.entities = [];
-	this.me = new Engine.Entity( "player", { mesh: this.camera, name: "Will Crichton" } );
+	this.players = [];
+	this.me = new Engine.Entity( "player", { mesh: this.camera, name: "Myself" } );
+	this.players.push( this.me );
 	this.entities.push( this.me );
 	if( args.position ) 
 		this.me.setPos( args.position )
@@ -113,11 +115,6 @@ Engine.World = function( args ){
 	*/
 	this.hooks = {};
 		
-	// Helper variables
-	
-	// Array of all players (minus this.me)
-	this.players = [];
-
 	// see: think
 	this.lastPosition = Vector();
 	
@@ -157,7 +154,9 @@ Engine.World.prototype = {
 	},
 	
 	removeEntity : function( obj ){
-	
+		
+		if( !obj ) return;
+		
 		var mesh;
 		if( obj.isEntity ){
 			mesh = obj.getMesh();
@@ -233,16 +232,9 @@ Engine.World.prototype = {
 	
 	addPlayer : function( args ){
 		
-		var newPlayer = new Engine.Entity( "player", args );
-		var model = this.addBlock({
-			width: 10, height: 10, depth: 10,
-			matObj: new THREE.MeshPhongMaterial({
-				color: 0x0000FF
-			})
-		});
-		newPlayer.setObject( model );
-		
-		insert(this.players,newPlayer);
+		var newPlayer = new Engine.Entity( "player", args );	
+		this.entities.push(newPlayer);
+		this.players.push(newPlayer);
 		
 		return newPlayer;
 		
@@ -250,55 +242,65 @@ Engine.World.prototype = {
 	
 	packetReceivedInternal : function( data ){
 		
-		try {
-			var jsonarr = $.parseJSON( data.data );
-			var type = jsonarr.PacketType;
-			var arr = jsonarr.data;
-			switch(type){
-			
-				case "load-players":
-					for(var i = 0; i < arr.length; i++){
-						if(arr[i].isMe)
-							this.me.id = arr[i].id
-						else
-							this.addPlayer( arr[i] );
+		var jsonarr = $.parseJSON( data.data );
+		var type = jsonarr.PacketType;
+		
+		console.log("Processing packet of type " + type);
+		
+		var arr = jsonarr.data;
+		switch(type){
+		
+			case "load-players":
+				for(var i = 0; i < arr.length; i++){
+					if(arr[i].isMe)
+						this.me.id = arr[i].id
+					else
+						this.addPlayer( arr[i] );
+				}
+				break;
+				
+			case "new-player":
+				this.callHook( 'PlayerConnected', this.addPlayer( arr ) );
+				console.log( 'Player "' + arr.id + '" has joined.' );
+				break;
+				
+			case "remove-player":
+				var index = -1;
+				for(var i = 0; i < this.players.length; i++){
+					if(this.players[i].id == arr.id){
+						index = i; break;
 					}
-					break;
-					
-				case "new-player":
-					this.callHook( 'PlayerConnected', this.addPlayer( arr ) );
-					break;
-					
-				case "remove-player":
-					var index = -1;
-					for(var i = 0; i < this.players.length; i++){
-						if(this.players[i].id == arr.id){
-							index = i; break;
-						}
-					}
-					var player = this.players[index];
-					this.players.splice(index,1);
-					this.callHook( 'PlayerDisconnected', player )
-					break;
-					
-				case "position":
-					var player = this.getPlayerByID(arr.id);
-					if(player){
-						player.setPos( Vector(arr.position) );
-					}
-					break;
-					
-				default:
-					console.log('Invalid PacketType received:',data.data);
-					break;
-					
-			}
-			
-			this.callHook( 'packetReceived', jsonarr );
-		} catch( e ){
-			// Error handling for JSON parse fail here
-			console.log(e,'Invalid packet:', data.data);
+				}
+				var player = this.players[index];
+				this.players.splice(index,1);
+				this.callHook( 'PlayerDisconnected', player )
+				world.removeEntity(player);
+				console.log( 'Player "' + arr.id + '" has left.' );
+				break;
+				
+			case "position":
+				var player = this.getPlayerByID(arr.id);
+				if(player){
+					player.setPos( Vector(arr.position) );
+				}
+				break;
+				
+			case "chat":
+				console.log( arr.name + ' says "' + arr.message + '"' );
+				break;
+				
+			case "error":
+				console.log("Error: " + arr.error);
+				break;
+				
+			default:
+				console.log('Invalid PacketType ("' + type + '") received:',data.data);
+				break;
+				
 		}
+		
+		this.callHook( 'packetReceived', jsonarr );
+	
 	},
 	
 	thinkInternal : function(){
