@@ -1,0 +1,135 @@
+* {
+	padding: 0;
+	margin: 0;
+}
+
+body {
+	background: black;
+	font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+.clear { clear: both; }
+
+#window {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 290px;
+	height: 120px;
+	padding: 20px;
+	margin-left: -165px;
+	margin-top: -80px;
+	background: #0C2B45;
+	-webkit-border-radius: 4px;
+	color: white;
+}
+
+	#window p {
+		margin-bottom: 5px;
+	}
+	
+	#window select {
+		float: left;
+	}
+	
+	#window input[type=file]{
+		float: right;
+		width: 85px;
+	}
+	
+	#window input[type=submit]{
+		padding: 2px 5px;
+		border: 0;
+		outline: 0;
+		width: 100px;
+		background: #0D203D;
+		border: 1px solid #245EBD;
+		float: right;
+		color: white;
+		margin-top: 10px;
+		cursor: pointer;
+	}
+	
+	#window input[type=submit]:hover {
+		background: #193D73;
+	}
+
+#loadBox {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	margin-left: -247px; 
+	margin-top: -133px;
+	display: none;
+	opacity: 0;
+}
+
+#controlPanel {
+	background: #0C2B45;
+	position: absolute;
+	left: 30px;
+	bottom: 30px;
+	width: 32px;
+	height: 32px;
+	overflow: hidden;
+	-webkit-border-radius: 4px;
+	color: white;
+	display: none;
+}
+
+	#controlToggle {
+		display: block;
+		cursor: pointer;
+		width: 32px;
+		height: 32px;
+		position: absolute;
+		bottom: 0px;
+		left: 0px;
+	}
+	
+	#controlContent {
+		display: none;
+		padding: 5px 10px 5px 5px;
+		font-size: 14px;		
+	}
+		
+		#controlContent > div {
+			margin-top: 10px;
+		}
+		
+		#controlContent > div:first-child {
+			margin: 0;
+		}
+		
+		#controlContent .ui-slider {
+			float: right;
+			width: 100px;
+			margin-top:5px;
+		}
+
+#songInfo {
+	position: absolute;
+	right: 30px;
+	bottom: 30px;
+	background: #0C2B45;
+	padding: 3px 6px;
+	color: white;
+	height: 25px;
+	font-size: 12px;
+	-webkit-border-radius: 4px;
+	opacity: 0;
+}
+
+	#songProgress {
+		border: 1px solid white;
+		overflow: auto;
+		height: 5px;
+		margin-top: 2px;
+	}
+
+	#songProgress div {
+		background: white;
+		float: left;
+		width: 0px;
+		height: 5px;
+	}
