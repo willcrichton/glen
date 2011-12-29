@@ -4,6 +4,7 @@
 ***************************************************/
 
 // Takes three args: name, map of options, optional world to specifically add to
+// BUG: entities which derive from other entities are overriding each other when created more than once (e.g. player derived from block overwrote other player)
 Engine.Entity = function( args ){	
 		
 	args = args || {};
@@ -128,20 +129,6 @@ Engine.registerEntity = function( name, func, extendEnt, args ){
 
 // Register additional entities
 
-var playerEnt = function( args ){
-		
-	this.name = args.name || 'Minge Baggerson';
-	this.id = args.id || '0';
-	
-	this.say = function( message ){
-		Engine.sendPacket( message, { 
-			PacketType: 'chat' 
-		});
-	}
-	
-}
-Engine.registerEntity( "player", playerEnt );
-
 
 var blockEnt = function( args ){
 
@@ -161,6 +148,28 @@ var blockEnt = function( args ){
 	
 }
 Engine.registerEntity( "block", blockEnt );
+
+
+
+var playerEnt = function( args ){
+	
+	var block = new THREE.CubeGeometry( 10, 100, 10 );
+	var material = ColorMaterial(0,255,0);
+	var mesh = new THREE.Mesh( block, material );		
+	mesh.position = args.pos || Vector(0,0,0);
+
+	this.setMesh(mesh);
+	
+	this.name = args.name || 'Minge Baggerson';
+	this.id = args.id || '0';
+	
+	this.say = function( message ){
+		Engine.say( message )
+	}
+	
+}
+Engine.registerEntity( "player", playerEnt );
+
 
 
 var sphereEnt = function( args ){
@@ -251,6 +260,8 @@ var ambientLightEnt = function( args ){
 	
 }
 Engine.registerEntity( "ambientLight", ambientLightEnt );
+
+
 
 var modelEnt = function( args ){
 	
