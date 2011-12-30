@@ -11,7 +11,7 @@ Glen.World = function( args ){
 	
 	// Setup the canvas to draw on
 	this.canvas = args.canvas || {
-		height: window.innerHeight,
+		height: window.innerHeight - 5,
 		width: window.innerWidth
 	}
 		
@@ -29,7 +29,7 @@ Glen.World = function( args ){
 			);
 		}
 	} else {
-		this.camera = new THREE.Camera( 60, this.canvas.width / this.canvas.height, 1, 100000 );
+		this.camera = new THREE.Camera( 60, this.canvas.width / this.canvas.height - 5, 1, 100000 );
 	}
 	
 	// Create a player entity for our main dude
@@ -43,6 +43,7 @@ Glen.World = function( args ){
 	
 	// Setup the scene to place objects in
 	this.scene = new THREE.Scene();
+	this.scene.addChild(this.camera);
 	
 	// Create a renderer to draw the Scene in the canvas
 	this.renderer = new THREE.WebGLRenderer({antialias:true});
