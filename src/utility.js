@@ -88,13 +88,13 @@ function ColorRandom(){
 	);
 }
 
-function ColorMaterial( r, g, b ){
+function ColorMaterial( r, g, b, lambert ){
 	var color;
 	if( typeof r != "number" ) 
 		color = r;
 	else
 		color = Color( r, g, b );
-	return new THREE.MeshPhongMaterial({ color: color });
+	return lambert ? new THREE.MeshLambertMaterial({ color: color }) : new THREE.MeshPhongMaterial({ color: color });
 }
 
 function loadModel( model, callback ){
