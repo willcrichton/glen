@@ -33,6 +33,7 @@ THREE.Object3D.prototype.getEntity = function(){
 	return this.entity;
 }
 
+/*
 THREE.FirstPersonCamera.prototype.translate = function ( distance, axis ) {
 
 	this.matrix.rotateAxis( axis );
@@ -49,7 +50,7 @@ THREE.FirstPersonCamera.prototype.translate = function ( distance, axis ) {
 	this.position.addSelf( axis.multiplyScalar( distance ) );
 	this.target.position.addSelf( axis.multiplyScalar( distance ) );
 
-};
+};*/
 
 // Slightly shorter vector initialization
 function Vector(x,y,z){
@@ -94,7 +95,10 @@ function ColorMaterial( r, g, b, lambert ){
 		color = r;
 	else
 		color = Color( r, g, b );
-	return lambert ? new THREE.MeshLambertMaterial({ color: color }) : new THREE.MeshPhongMaterial({ color: color });
+	return new Physijs.createMaterial(
+		lambert ? new THREE.MeshLambertMaterial({ color: color }) : new THREE.MeshPhongMaterial({ color: color }),
+		.8,
+		.4);
 }
 
 function loadModel( model, callback ){
