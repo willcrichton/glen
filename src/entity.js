@@ -131,34 +131,35 @@ Glen.registerEntity = function( name, func, extendEnt, args ){
 
 
 var blockEnt = function( args ){
-
-	var block = new THREE.CubeGeometry( args.width, args.height, args.depth, args.segmentsWidth, args.segmentsHeight, args.segmentsDepth, args.materials, args.flipped, args.sides );
+	var block = new THREE.CubeGeometry( args.width, args.height, args.depth );
 	var material;
 	if( args.material ) 
 		material = args.material;
+	else if( args.color )
+		material = ColorMaterial( args.color )
 	else 
 		material = new THREE.MeshFaceMaterial();
-	var mesh = new THREE.Mesh( block, material );		
+	var mesh = new Physijs.BoxMesh( block, material, args.mass || 10 );		
 	mesh.position = args.pos || Vector(0,0,0);
-	
-	// Testing collisions? (IN PROGRESS)
-	THREE.Collisions.colliders.push( THREE.CollisionUtils.MeshOBB( mesh ) );
-	
-	this.setMesh(mesh);
-	
+	mesh.receiveShadow = true;
+	mesh.castShadow = true;
+		
+	return mesh;
 }
 Glen.registerEntity( "block", blockEnt );
 
 
 
 var playerEnt = function( args ){
-	
 	var block = new THREE.CubeGeometry( 10, 100, 10 );
-	var material = ColorMaterial(0,255,0);
-	var mesh = new THREE.Mesh( block, material );		
+	var mesh = new Physijs.BoxMesh( block, args.material || new Glen.Material('images/rocks.jpg'), 10 );		
 	mesh.position = args.pos || Vector(0,0,0);
-
-	this.setMesh(mesh);
+	mesh.add( args.camera );
+	//Glen.worlds[0].scene.add( args.camera );
+	mesh.receiveShadow = true;
+	mesh.castShadow = true;
+	
+	args.camera.position.copy( Vector(100,100,100) );
 	
 	this.name = args.name || 'Minge Baggerson';
 	this.id = args.id || '0';
@@ -167,104 +168,99 @@ var playerEnt = function( args ){
 		Glen.say( message )
 	}
 	
+	return mesh;
 }
 Glen.registerEntity( "player", playerEnt );
 
 
 
 var sphereEnt = function( args ){
-
 	var sphere = new THREE.SphereGeometry( args.radius, args.segments, args.rings );
 	var material;
 	if( args.material ) 
 		material = args.material;
 	else 
 		material = new THREE.MeshFaceMaterial();
-	var mesh = new THREE.Mesh( sphere, material );
+	var mesh = new Physijs.SphereMesh( sphere, material );
 	mesh.position = args.pos || Vector(0,0,0);
 	
 	THREE.Collisions.colliders.push( THREE.CollisionUtils.MeshOBB( mesh ) );
 	
-	this.setMesh(mesh);
-
+	return mesh;
 }
 Glen.registerEntity( "sphere", sphereEnt );
 
 
-var planeEnt = function( args ){
 
+var planeEnt = function( args ){
 	var plane = new THREE.PlaneGeometry( args.length, args.width );
 	var material;
 	if( args.material ) 
 		material = args.material;
 	else 
 		material = new THREE.MeshFaceMaterial();
-	var planeMesh = new THREE.Mesh(plane,material);
+	var planeMesh = new Physijs.PlaneMesh( plane, material, args.mass || 0 );
+	planeMesh.receiveShadow = true;
 	planeMesh.position = args.pos || Vector(0,0,0);
-	planeMesh.rotation = Vector(-1 * Math.PI / 2,0,0);
 	
 	return planeMesh;
-
 }
-Glen.registerEntity( "plane", planeEnt );
+Glen.registerEntity( "floor", planeEnt );
+
 
 
 var textEnt = function( args ){
-
 	var text = new THREE.TextGeometry( args.text, args );
 	var material;
 	if( args.material )
 		material = args.material;
 	else
 		material = new THREE.MeshFaceMaterial();
-	var mesh = new THREE.Mesh( text, material );
+	var mesh = new Physijs.ConvexMesh( text, material );
 	mesh.position = args.pos || Vector();
 	
 	THREE.Collisions.colliders.push( THREE.CollisionUtils.MeshOBB( mesh ) );
 	
 	return mesh;
-	
 }
 Glen.registerEntity( "text", textEnt );
 
 
-var pointLightEnt = function( args ){
 
+var pointLightEnt = function( args ){
 	var light = new THREE.PointLight( args.color || 0xFFFFFF );
 	light.position = args.pos || Vector(0,0,0);
 	light.intensity = args.intensity;
 	
 	return light;
-	
 }
 Glen.registerEntity( "pointLight", pointLightEnt );
 
 
-var directionalLightEnt = function( args ){
 
+var directionalLightEnt = function( args ){
 	var directionalLight = new THREE.DirectionalLight( args.color || 0xFFFFFF, args.intensity, args.distance );
 	directionalLight.position = args.pos;
-	directionalLight.position.normalize();
+	directionalLight.castShadow = true;
+	directionalLight.target.position.copy( args.target || Glen.worlds[0].scene.position );
+	//directionalLight.position.normalize();
 	
 	return directionalLight;
-	
 }
 Glen.registerEntity( "directionalLight", directionalLightEnt );
 
 
+
 var ambientLightEnt = function( args ){
-	
 	var ambientLight = new THREE.AmbientLight( args.color || 0xFFFFFF );
 	
 	return ambientLight;
-	
 }
 Glen.registerEntity( "ambientLight", ambientLightEnt );
 
 
 
 var modelEnt = function( args ){
-	
 	var loader = new THREE.JSONLoader();
 	var ent = this;
 	loader.load( { model: args.model, callback: function( geometry ){
@@ -273,7 +269,6 @@ var modelEnt = function( args ){
 		world.scene.addObject( mesh );
 	} } );
 	
-	return new THREE.Mesh( new THREE.Geometry(), new THREE.MeshFaceMaterial() );
-	
+	return new Physijs.ConvexMesh( new THREE.Geometry(), new THREE.MeshFaceMaterial() );
 }
 Glen.registerEntity( "model", modelEnt );
