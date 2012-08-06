@@ -16,6 +16,9 @@ IDEA DUMP
 	- chatting
 *****************************************************************`*/
 
+Physijs.scripts.worker = 'engine/lib/physijs_worker.js';
+Physijs.scripts.ammo = 'ammo.js';
+
 // Create the Glen array to store all functions
 var Glen = Glen || {
 	directory: 'engine/',
