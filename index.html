@@ -1,1 +1,58 @@
-Testing!
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+	* { margin; 0; padding: 0; }
+	body { 
+	  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+	  background: #f2f2f2;
+	}
+
+    #container {
+	  width: 600px;
+	  margin: 50px auto;
+	  text-align: center;
+	}
+
+	#demo {
+	  width: 600px;
+	  height: 600px;
+	}
+  </style>
+  <script src="js/glen.min.js"></script>
+</head>
+<body>
+  <div id="container">
+	<h1>Glengine</h1>
+	<div id="demo"></div>
+    <script>
+        var world = new Glen.World({
+            position: Glen.Vector(60, 50, 60),
+            container: document.getElementById('demo'),
+            skybox: { path: 'skybox/' }
+        });
+
+        var light = new Glen.Entity("directionalLight", {
+            position: Glen.Vector(20, 40, -15),
+        });
+
+        var floor = new Glen.Entity("floor", {
+            w: 100, d: 100, 
+            material: Glen.Material("images/rocks.jpg", 
+                                    {friction: .8, restitution: .4}),
+        });
+
+        var block = new Glen.Entity("block", {
+            w: 10, h: 10, d: 10,
+            color: Glen.Color(255, 0, 0),
+            pos: Glen.Vector(0, 80, 0),
+            rotation: Glen.Vector(Math.random() * Math.PI * 2,
+                Math.random() * Math.PI * 2,
+                Math.random() * Math.PI * 2)
+        });
+
+        world.render();
+    </script>
+  </div>
+</body>
+</html>
