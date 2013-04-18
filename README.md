@@ -1,86 +1,62 @@
 # glen
 * * *
 ### Purpose ###
-GLEngine is a game-oriented javascript framework for developers using WebGL, aimed at providing features necessary to provide a better gaming experience on the web (and making it easy and intuitive to do). 
-
-### Usage ###
-First, include all the requisite files.  
-
-```html
-<script src='http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js'></script>
-<script src='engine/lib/Three.js'></script>
-<script src="engine/engine.js"></script>
-<script src='engine/utility.js'></script>
-<script src='engine/socket.js'></script>
-<script src='engine/material.js'></script>
-<script src='engine/entity.js'></script>
-<script src='engine/render.js'></script>
-<script src='engine/world.js'></script>
-```
-
-Then, create a world and add some entities.
-
-```html
-<script>
-	jQuery(document).ready(function(){
-				
-		// Make the sky light blue by setting background color
-		document.body.style.background = 'lightBlue';
-		
-		// Create a new world object
-		world = new Glen.World({
-			position: Vector(100,30,100),							// player's starting position
-			camera: new THREE.FirstPersonCamera({					// FirstPersonCamera looks around with mouse
-				fov: 45, aspect: window.innerWidth / (window.innerHeight - 5), near: 1, far: 100000,
-				movementSpeed: 250, lookSpeed: 0.125, noFly: true, constrainVertical: true
-			}),
-			fog: { color: Color(173,216,230), distance: 0.0015 }	// Add fog to make it look nice
-		});
-		
-		// Add lighting so it's not black
-		new Glen.Entity("ambientLight",{color: 0xCCCCCC});			
-		new Glen.Entity("directionalLight",{
-			pos: Vector(1,1,0.5).normalize(), 
-			color: Color(255,255,255), 
-			intensity: 1.5
-		});
-		
-		// The floor (looks better with textures)
-		new Glen.Entity( "plane", {
-			material: ColorMaterial(0,50,0,true),
-			width: 10000,
-			length: 10000
-		});
-		
-		// A block for reference
-		new Glen.Entity( "block", {
-			width: 100, height: 100, depth: 100,
-			material: ColorMaterial(200,0,0)
-		});
-			
-		// Start the rendering process
-		world.startRender();
-						
-	});
-</script>
-```
+Glengine is a game-oriented javascript framework for developers using WebGL, aimed at providing features essential for better gaming experience on the web. Glen abstracts the annoying chores of WebGL, allowing you to build your game as quickly as possible. Glengine builds upon [three.js](http://www.github.com/mrdoob/three.js), so Three developers are welcome as well!
 
 ### Features ###
-Features include (or will soon include):  
+* Easy set up to get your world started
+* Extensible system for managing objects in the world
+* Support for both default and custom events (e.g. clicking an object)
+* Useful game features:
+     - Built-in physics engine using [physijs](https://github.com/chandlerprall/Physijs)
+	 - Fullscreen support 
+	 - Mouse locking and actual first person camera
 
-* Intuitive setup (make a world, add entities)
-* Convenient "entity" system
-* "Hook" system to handle world-scale and entity-scale events
-* Abstracting away most complicated rendering processes
-* Useful utility functions (e.g. simple vectors, colors)
+### Demo ###
+```
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="engine/jquery.min.js"></script>
+    <script src="engine/three.min.js"></script>
+    <script src="engine/physi.js"></script>
+    <script src="engine/world.js"></script>  
+    <script src="engine/utility.js"></script> 
+    <script src="engine/controls.js"></script>
+    <script src="engine/entity.js"></script>
+    <style> * { padding: 0; margin: 0; }</style>   
+</head>
+<body>
+    <script>
+        var world = new Glen.World({
+            position: Glen.Vector(60, 50, 60),
+            skybox: { path: 'skybox/' }
+        });
 
-Planned features include (?):  
+				var light = new Glen.Entity("directionalLight", {
+					    position: Glen.Vector(20, 40, -15),
+								  });
 
-* Voice chat
-* Map loading and creating
-* FPS-style first person camera (...if mouse locking ever becomes available)
-* Multiplayer support with WebSockets
-* Basic physics - gravity, collision, movement
+        var floor = new Glen.Entity("floor", {
+            w: 100, d: 100, 
+            material: Glen.Material("images/rocks.jpg", 
+                                    {friction: .8, restitution: .4}),
+        });
+
+        var block = new Glen.Entity("block", {
+            w: 10, h: 10, d: 10,
+            color: Glen.Color(255, 0, 0),
+            pos: Glen.Vector(0, 80, 0),
+            rotation: Glen.Vector(Math.random() * Math.PI * 2,
+                Math.random() * Math.PI * 2,
+                Math.random() * Math.PI * 2)
+        });
+
+        world.render();
+    </script>
+</body>
+</html>
+```
 
 ### Thanks ####
-This framework relies heavily on mrdoob's [three.js](http://www.github.com/mrdoob/three.js) for all of the rendering grunt work. I couldn't have gotten this far without that wonderful script.
+As previously mentioned, this framework relies heavily on mrdoob's lovely [three.js](http://www.github.com/mrdoob/three.js) for all of the rendering grunt work as well as Chandler Prall's awesome [physijs](https://github.com/chandlerprall/Physijs) for the physics engine.
