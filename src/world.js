@@ -177,9 +177,16 @@ Glen.World.prototype = {
     callHook: function( hook ){
         var args = Array.prototype.slice.call(arguments);
         args.splice( 0, 1 );
-        if( this._hooks[hook] )
-            for(i in this._hooks[hook])
-                this._hooks[hook][i].apply(this, args);
+        var retval;
+        if( this._hooks[hook] ){
+            for(i in this._hooks[hook]){
+                var tmp = this._hooks[hook][i].apply(this, args);
+                if (typeof tmp != 'undefined' && typeof retval == 'undefined') {
+                    retval = tmp;
+                }
+            }   
+        }
+        return retval;
     },
 
     removeHook: function(hook, name){
@@ -200,7 +207,7 @@ Glen.World.prototype = {
     },
 
     listenFullScreen: function( event ){
-        document.addEvenetListener(event, function() {
+        document.addEventListener(event, function() {
             var el = this.documentElement,
             rfs = el.requestFullScreen
                 || el.webkitRequestFullScreen

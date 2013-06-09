@@ -270,8 +270,8 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 	this.domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
 
 	this.domElement.addEventListener( 'mousemove', bind( this, this.onMouseMove ), false );
-	this.domElement.addEventListener( 'mousedown', bind( this, this.onMouseDown ), false );
-	this.domElement.addEventListener( 'mouseup', bind( this, this.onMouseUp ), false );
+	//this.domElement.addEventListener( 'mousedown', bind( this, this.onMouseDown ), false );
+	//this.domElement.addEventListener( 'mouseup', bind( this, this.onMouseUp ), false );
 	this.domElement.addEventListener( 'keydown', bind( this, this.onKeyDown ), false );
 	this.domElement.addEventListener( 'keyup', bind( this, this.onKeyUp ), false );
 
@@ -411,6 +411,12 @@ Glen.FPSControls = function( args ){
 		this.yDiff = this.yDiff / 2;
 
 		this.object.lookAt( targetPosition );
+
+		if (this.moveForward || this.moveBackward || this.moveRight 
+			|| this.moveLeft || this.moveUp || this.moveDown
+			|| this.xDiff > 0.01 || this.yDiff > 0.01) {
+			Glen._world.callHook('Move', this);
+		}	
 
 	};
 	
