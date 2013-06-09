@@ -75,7 +75,7 @@ Glen.ColorRandom = function(){
 Glen.Material = function( path, args ) {
 	args = args || {};
 	var material = Physijs.createMaterial(
-		new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( path ) }),
+		new THREE.MeshPhongMaterial({ map: THREE.ImageUtils.loadTexture( path ), shading: THREE.FlatShading }),
 		args.friction || .4,
 		args.restitution || .6
 	);
@@ -91,7 +91,8 @@ Glen.ColorMaterial = function( r, g, b, lambert, friction, restitution ){
 	else
 		color = Glen.Color( r, g, b );
 	return new Physijs.createMaterial(
-		lambert ? new THREE.MeshLambertMaterial({ color: color }) : new THREE.MeshPhongMaterial({ color: color }),
+		lambert ? new THREE.MeshLambertMaterial({ color: color, shading: THREE.FlatShading, }) : 
+				  new THREE.MeshPhongMaterial({ color: color, shading: THREE.FlatShading }),
 		friction || .4,
 		restitution || .6);
 }
