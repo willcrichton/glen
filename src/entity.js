@@ -5,6 +5,7 @@
 
 Glen._entities = {};
 
+// copies properties of b onto a, like jQuery.extend
 function _extend(a, b){
     for(var key in b)
         if(b.hasOwnProperty(key))
@@ -12,7 +13,19 @@ function _extend(a, b){
     return a;
 }
 
+/* Create a custom entity
+ * name: unique string associated with entity (don't overrwrite existing entities!)
+ * construct: constructor for the entity, called after all extender constructors
+ * extender: name of entity to extend, if any
+ * extendArgs: map of arguments to pass to extended entity
+ * Note for clarity: constructors bubble up from the bottom-level extenders, whereas arguments are 
+ * constructed top-down (e.g. top-level arguments overrwrite low-level ones).
+ */
 Glen.registerEntity = function(name, construct, extender, extendArgs){
+	if (typeof Glen._entities[name] != "undefined") {
+		throw new Error('"' + name + '" is already defined, cannot reigster it');
+		return
+	}
 	Glen._entities[name] = {
 		construct: construct,
 		extender: extender,
@@ -20,8 +33,8 @@ Glen.registerEntity = function(name, construct, extender, extendArgs){
 	}
 }
 
+// Constructor for all entities, takes name and arguments
 Glen.Entity = function(ent, args){
-	this._id = -1;
 	this.hooks = {};
 	this.entType = ent;
 	var entInfo = Glen._entities[this.entType];
@@ -40,35 +53,18 @@ Glen.Entity = function(ent, args){
 		var newObj = queue[i].call(entObj, entArgs);
 		if(newObj != undefined) entObj = newObj;
 	}
-	this.setMesh(entObj);
-	entObj._entity = this;
+	_extend(entObj, this);
 
-	Glen._world.addEntity(this);
+	Glen._world.addEntity(entObj);
+	return entObj;
 }
 
-Glen.Entity.prototype = {
+Glen.Entity.constructor = Glen.Entity;
+Glen.Entity.prototype = new THREE.Object3D;
+_extend(Glen.Entity.prototype,
+{
 	getType: function(){
 		return this.entType;
-	},
-	
-	getMesh: function(){
-		return this.mesh;
-	},
-	
-	getObject: function(){
-		return this.mesh;
-	},
-	
-	setMesh: function( mesh ){
-		if(this.mesh){
-			this.mesh.entity = undefined;
-		}
-		this.mesh = mesh;
-		mesh.entity = this;
-	},
-
-	setObject: function( mesh ){
-		this.setMesh(mesh);
 	},
 	
 	getPos: function(){
@@ -115,11 +111,7 @@ Glen.Entity.prototype = {
 	remove: function(){
 		Glen._world.removeEntity( this );
 	},
-
-	ID: function(){
-		return this._id;
-	}
-}
+});
 
 /* BASIC GEOMETRIES */
 Glen.registerEntity("basic", function(args){
@@ -129,21 +121,22 @@ Glen.registerEntity("basic", function(args){
 	} else if(args.color){
 		material = Glen.ColorMaterial(args.color);
 	} else {
-		material = new THREE.MeshFaceMaterial();
+		material = new Glen.ColorMaterial(0xffffff);
 	}
 	if(!args.meshfn) throw new Error("Basic entity type requires Physijs mesh constructor");
 	if(!args.geometry) throw new Error("Basic entity type requires some THREE.Geometry type");
 	var mesh = new args.meshfn(args.geometry, material, typeof args.mass == "undefined" ? 10 : args.mass);
 	if(args.rotation) mesh.rotation.copy(args.rotation);
-	mesh.position.copy(args.pos || Glen.Vector(0,0,0));
+	mesh.position.copy(args.position || Glen.Vector(0,0,0));
 	mesh.castShadow = true;
+
 	return mesh;
 });
 
 Glen.registerEntity("block", undefined, "basic", 
 function(args){
 	return {
-		geometry: new THREE.CubeGeometry(args.w || args.width, args.h || args.height, args.d || args.depth),
+		geometry: new THREE.CubeGeometry(args.width, args.height, args.depth),
 		meshfn: Physijs.BoxMesh
 	}
 });
@@ -151,7 +144,7 @@ function(args){
 Glen.registerEntity("floor", function(){
 	this.castShadow = false;
 	this.receiveShadow = true;
-}, "block", {h: 1, mass: 0});
+}, "block", {height: 1, mass: 0});
 
 Glen.registerEntity("sphere", undefined, "basic", 
 function(args){

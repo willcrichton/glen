@@ -162,8 +162,9 @@ Glen.World.prototype = {
         }
 
         this.callHook('Think', this);
-        for(var i in this._entities) 
-            this._entities[i].callHook('Think');
+        for(var i in this._entities)
+            if (this._entities[i] instanceof Glen.Entity)
+                this._entities[i].callHook('Think');
     },
 
     addHook: function(hook, name, callback){
@@ -185,25 +186,15 @@ Glen.World.prototype = {
     },
 
     addEntity: function(ent){
-        if(ent.entType){
-            this.scene.add(ent.getMesh());
-            ent._id = this._eid++;
-            this._entities[ent.ID()] = ent;
-        } else {
-            this.scene.add(ent);
-        }
+        if(!ent) return;
+        this.scene.add(ent);
+        this._entities[ent.id] = ent;
     },
 
     removeEntity: function(obj){
         if(!obj) return;
-        var mesh;
-        if(obj.entType){
-            mesh = obj.getMesh();
-            delete this._entities[obj.ID()]
-        } else {
-            mesh = obj;
-        }
-        this.scene.removeChildRecurse(mesh);
+        delete this._entities[obj.id]
+        this.scene.removeChildRecurse(obj);
     },
 
     listenFullScreen: function( event ){
