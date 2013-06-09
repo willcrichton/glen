@@ -91,7 +91,7 @@ Glen.ColorMaterial = function( r, g, b, lambert, friction, restitution ){
 	else
 		color = Glen.Color( r, g, b );
 	return new Physijs.createMaterial(
-		lambert ? new THREE.MeshLambertMaterial({ color: color, shading: THREE.FlatShading, }) : 
+		lambert ? new THREE.MeshLambertMaterial({ color: color, shading: THREE.FlatShading }) : 
 				  new THREE.MeshPhongMaterial({ color: color, shading: THREE.FlatShading }),
 		friction || .4,
 		restitution || .6);
