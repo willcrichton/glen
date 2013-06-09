@@ -8,15 +8,9 @@ TODO:
     - particles (fireworks demo?)
     - shaders
     - stats bar
-    - POSTPROCESSING (this is easy shit)
+    - postprocessing (DOF??)
 - PhysiJS car demo
 ****************************************/
-
-// presets for other scripts
-Physijs.scripts.worker = 'physijs_worker.js';
-Physijs.scripts.ammo = 'ammo.js';
-
-Glen = {};
 
 Glen.World = function(args){
     args = args || {};
@@ -72,6 +66,11 @@ Glen.World = function(args){
         this.camera = new THREE.PerspectiveCamera( 60, this.canvasWidth / this.canvasHeight, 1, 100000 );
     }
     this.camera.position = args.position || Glen.Vector(0,0,0);
+
+    // use an effects composer to allow for postprocessing
+    this.composer = new THREE.EffectComposer(this.renderer);
+    this.composer.addPass(new THREE.RenderPass(this.scene, this.camera));
+    this._fx = false;
 
     // allow the user to control the camera
 	if(args.controls){
@@ -140,8 +139,11 @@ Glen.World.prototype = {
 		}
         this.scene.simulate();                              // update physics
         this._think();                                      // run internal thinking
-        this.renderer.render(this.scene, this.camera);      // draw the scene
-        this.callHook('render');                            // render hooks
+        if(this._fx)
+            this.composer.render();
+        else 
+            this.renderer.render(this.scene, this.camera);
+        this.callHook('Render');                            // render hooks
     },
 
     _think: function(){
@@ -261,5 +263,21 @@ Glen.World.prototype = {
 
     removeFog : function(){
         this.scene.fog = undefined;
+    },
+
+    addShaderEffect : function(args){
+        var pass = new THREE.ShaderPass(args.shader);
+        if(args.uniforms){
+            for(var k in args.uniforms){
+                pass.uniforms[k].value = args.uniforms[k];
+            }
+        }
+        this.composer.addPass(pass);
+        this._fx = true;
+        if(args.last){
+            var copy = new THREE.ShaderPass(THREE.CopyShader);
+            copy.renderToScreen = true;
+            this.composer.addPass(copy);
+        }
     }
 }
