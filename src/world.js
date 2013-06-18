@@ -14,18 +14,16 @@ TODO:
 
 Glen.World = function(args){
     args = args || {};
-	
-	// helper variables
+    
+    // helper variables
     this._clock = new THREE.Clock();    // for updating FPS controls
     this._clock.start();
     this._entities = {};                // dict of all entities in the world
     this._eid = 0;                      // counter for entity IDs
     this._hooks = {};                   // dict of hooks to the world's events
-    this._hovering = undefined;               // for the MouseOver hook
     Glen._world = this;                 // update current main world
 
     var self = this;
-
 
     // establish container element/size for renderer
     if(!args.container){
@@ -40,7 +38,7 @@ Glen.World = function(args){
 
     // create scene which contains the objects in our world
     // we use Physijs for the physics
-    this.scene = new Physijs.Scene;
+    this.scene = new Physijs.Scene();
     this.scene.setGravity(args.gravity || Glen.Vector(0, -30, 0));
 
     // set up renderer for displaying scene in the canvas
@@ -53,7 +51,7 @@ Glen.World = function(args){
     // create viewport for user to see into the canvas
     if(args.camera){
         if(args.camera.constructor.toString().indexOf("Array") == -1) 
-            this.camera = args.camera
+            this.camera = args.camera;
         else {
             this.camera = new THREE.PerspectiveCamera(
                 args.camera.fov,
@@ -73,29 +71,29 @@ Glen.World = function(args){
     this._fx = false;
 
     // allow the user to control the camera
-	if(args.controls){
-		var controls = new Glen.FPSControls( this.camera );
-		controls.movementSpeed = 100;
-		controls.lookSpeed = 0.125;
-		controls.lookVertical = true;
-		controls.noFly = true;
-		controls.constrainVertical = true;
-		controls.constrainHorizontal = typeof args.constrainLook != "undefined" ? args.constrainLook : true;
-		this.controls = controls;
-	} else if(args.look) {
-		var mouseX = 0, mouseY = 0;
-		document.addEventListener('mousemove', function(event){
-			mouseX = event.clientX - window.innerWidth / 2;
-			mouseY = event.clientY - window.innerHeight / 2;
-		}, false);
-		
-		this.addHook('Think', '_CameraUpdate', function(){
-			var camera = this.camera;
-			camera.position.x += ( mouseX - camera.position.x ) * 0.01;
-			camera.position.y += ( - mouseY - camera.position.y ) * 0.01;
-			camera.lookAt(this.scene.position);
-		});
-	}
+    if(args.controls){
+        var controls = new Glen.FPSControls( this.camera );
+        controls.movementSpeed = 100;
+        controls.lookSpeed = 0.125;
+        controls.lookVertical = true;
+        controls.noFly = true;
+        controls.constrainVertical = true;
+        controls.constrainHorizontal = typeof args.constrainLook != "undefined" ? args.constrainLook : true;
+        this.controls = controls;
+    } else if(args.look) {
+        var mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', function(event){
+            mouseX = event.clientX - window.innerWidth / 2;
+            mouseY = event.clientY - window.innerHeight / 2;
+        }, false);
+        
+        this.addHook('Think', '_CameraUpdate', function(){
+            var camera = this.camera;
+            camera.position.x += ( mouseX - camera.position.x ) * 0.01;
+            camera.position.y += ( - mouseY - camera.position.y ) * 0.01;
+            camera.lookAt(this.scene.position);
+        });
+    }
 
     this.camera.lookAt(args.lookAt || this.scene.position);
 
@@ -113,7 +111,7 @@ Glen.World = function(args){
         var event = typeof args.fullscreen == "string" ? args.fullscreen : "dblclick";
         this.listenFullScreen(event);
     }
-            
+    
     // Set up Click hook
     document.addEventListener('click', function(){
         var ent = Glen.mouseTrace().object._entity;
@@ -125,7 +123,7 @@ Glen.World = function(args){
     document.addEventListener('keypress', function(e){
         self.callHook('KeyPress', e.which);  
     });
-}
+};
 
 Glen.World.prototype = {
     render: function(){
@@ -135,8 +133,8 @@ Glen.World.prototype = {
         requestAnimationFrame(function(){ self.render(); });
 
         if(this.controls){
-			this.controls.update(this._clock.getDelta());   // update controls
-		}
+            this.controls.update(this._clock.getDelta());   // update controls
+        }
         this.scene.simulate();                              // update physics
         this._think();                                      // run internal thinking
         if(this._fx)
@@ -149,9 +147,9 @@ Glen.World.prototype = {
     _think: function(){
         // do things on think
         var trace = Glen.mouseTrace();
-        if(typeof trace != "undefined"
-		   && typeof trace.object._entity != "undefined"){
-			var hoverEnt = trace.object._entity;
+        if(typeof trace != "undefined" && 
+           typeof trace.object._entity != "undefined"){
+            var hoverEnt = trace.object._entity;
             if(hoverEnt != this._hovering){
                 world.callHook('MouseEnter', hoverEnt);
                 hoverEnt.callHook('MouseEnter');
@@ -178,8 +176,8 @@ Glen.World.prototype = {
         var args = Array.prototype.slice.call(arguments);
         args.splice( 0, 1 );
         var retval;
-        if( this._hooks[hook] ){
-            for(i in this._hooks[hook]){
+        if (this._hooks[hook]) {
+            for (var i in this._hooks[hook]) {
                 var tmp = this._hooks[hook][i].apply(this, args);
                 if (typeof tmp != 'undefined' && typeof retval == 'undefined') {
                     retval = tmp;
@@ -202,16 +200,16 @@ Glen.World.prototype = {
 
     removeEntity: function(obj){
         if(!obj) return;
-        delete this._entities[obj.id]
+        delete this._entities[obj.id];
         this.scene.removeChildRecurse(obj);
     },
 
     listenFullScreen: function( event ){
         document.addEventListener(event, function() {
             var el = this.documentElement,
-            rfs = el.requestFullScreen
-                || el.webkitRequestFullScreen
-                || el.mozRequestFullScreen;
+            rfs = el.requestFullScreen || 
+                el.webkitRequestFullScreen || 
+                el.mozRequestFullScreen;
             rfs.call(el, Element.ALLOW_KEYBOARD_INPUT);
             el.ALLOW_KEYBOARD_INPUT = 1;
         }, false);
@@ -240,8 +238,8 @@ Glen.World.prototype = {
         ];
         
         var textureCube = THREE.ImageUtils.loadTextureCube( urls, new THREE.CubeRefractionMapping() );
-        var shader = THREE.ShaderLib["cube"];
-        shader.uniforms["tCube"].value = textureCube;
+        var shader = THREE.ShaderLib.cube;
+        shader.uniforms.tCube.value = textureCube;
 
         var material = new THREE.ShaderMaterial( {
 
@@ -287,4 +285,4 @@ Glen.World.prototype = {
             this.composer.addPass(copy);
         }
     }
-}
+};
