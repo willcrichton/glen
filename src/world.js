@@ -42,7 +42,7 @@ TODO:
         // create scene which contains the objects in our world
         // we use Physijs for the physics
         this.scene = new Physijs.Scene();
-        this.scene.setGravity(args.gravity || Glen.Vector(0, -30, 0));
+        this.scene.setGravity(args.gravity || Glen.Util.Vector(0, -30, 0));
 
         // set up renderer for displaying scene in the canvas
         this.renderer = new THREE.WebGLRenderer();
@@ -116,11 +116,12 @@ TODO:
         }
         
         // Set up Click hook
-        document.addEventListener('click', function(){
-            var ent = Glen.mouseTrace().object._entity;
+        document.addEventListener('click', (function(){
+            var ent = Glen.Util.MouseTrace(this.camera).object._entity;
+            console.log(ent);
             self.callHook('Click', ent);
             if(ent) ent.callHook('Click');
-        });
+        }).bind(this));
 
         // Simple KeyPress hook
         document.addEventListener('keypress', function(e){
@@ -149,9 +150,9 @@ TODO:
 
         _think: function(){
             // do things on think
-            var trace = Glen.mouseTrace();
-            if(typeof trace != "undefined" && 
-               typeof trace.object._entity != "undefined"){
+            var trace = Glen.Util.MouseTrace(this.camera);
+            if (trace !== undefined && 
+               trace.object._entity !== undefined) {
                 var hoverEnt = trace.object._entity;
                 if(hoverEnt != this._hovering){
                     world.callHook('MouseEnter', hoverEnt);
@@ -166,8 +167,7 @@ TODO:
 
             this.callHook('Think', this);
             for(var i in this._entities)
-                if (this._entities[i] instanceof Glen.Entity)
-                    this._entities[i].callHook('Think');
+                this._entities[i].callHook('Think');
         },
 
         addHook: function(hook, name, callback){
@@ -195,13 +195,13 @@ TODO:
             delete this._hooks[hook][name];
         },
 
-        addEntity: function(ent){
+        add: function(ent){
             if(!ent) return;
             this.scene.add(ent);
             this._entities[ent.id] = ent;
         },
 
-        removeEntity: function(obj){
+        remove: function(obj){
             if(!obj) return;
             delete this._entities[obj.id];
             this.scene.removeChildRecurse(obj);
@@ -214,7 +214,6 @@ TODO:
                     el.webkitRequestFullScreen || 
                     el.mozRequestFullScreen;
                 rfs.call(el, Element.ALLOW_KEYBOARD_INPUT);
-                el.ALLOW_KEYBOARD_INPUT = 1;
             }, false);
             
             var self = this;
@@ -257,7 +256,7 @@ TODO:
             var mesh = new THREE.Mesh( new THREE.CubeGeometry( 100000, 100000, 100000 ), material );
             mesh.castShadow = false;
             mesh.name = "skybox";
-            this.addEntity( mesh );
+            this.add( mesh );
         },
 
         setFog : function( color, density ){
