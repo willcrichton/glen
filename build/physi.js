@@ -110,7 +110,7 @@ window.Physijs = (function() {
 		if ( object.useQuaternion ) {
 			_temp_matrix4_1.identity().setRotationFromQuaternion( object.quaternion );
 		} else {
-			_temp_matrix4_1.identity().setRotationFromEuler( object.rotation );
+			_temp_matrix4_1.identity().makeRotationFromEuler( object.rotation );
 		}
 
 		// Invert rotation matrix in order to "unrotate" a point back to object space
@@ -671,10 +671,10 @@ window.Physijs = (function() {
 					if ( object._physijs.touches.indexOf( object2._physijs.id ) === -1 ) {
 						object._physijs.touches.push( object2._physijs.id );
 
-						_temp_vector3_1.sub( object.getLinearVelocity(), object2.getLinearVelocity() );
+						_temp_vector3_1.subVectors( object.getLinearVelocity(), object2.getLinearVelocity() );
 						_temp1 = _temp_vector3_1.clone();
 
-						_temp_vector3_1.sub( object.getAngularVelocity(), object2.getAngularVelocity() );
+						_temp_vector3_1.subVectors( object.getAngularVelocity(), object2.getAngularVelocity() );
 						_temp2 = _temp_vector3_1;
 
 						object.dispatchEvent( 'collision', object2, _temp1, _temp2 );
@@ -859,7 +859,7 @@ window.Physijs = (function() {
 				// Object starting position + rotation
 				object._physijs.position = { x: object.position.x, y: object.position.y, z: object.position.z };
 				if (!object.useQuaternion) {
-					_matrix.identity().setRotationFromEuler( object.rotation );
+					_matrix.identity().makeRotationFromEuler( object.rotation );
 					object.quaternion.setFromRotationMatrix( _matrix );
 				}
 				object._physijs.rotation = { x: object.quaternion.x, y: object.quaternion.y, z: object.quaternion.z, w: object.quaternion.w };
@@ -875,7 +875,7 @@ window.Physijs = (function() {
 				if ( object._physijs.depth ) {
 					object._physijs.depth *= object.scale.z;
 				}
-
+				
 				this.execute( 'addObject', object._physijs );
 
 			}
@@ -935,7 +935,7 @@ window.Physijs = (function() {
 
 				if ( object.__dirtyRotation ) {
 					if (!object.useQuaternion) {
-						_matrix.identity().setRotationFromEuler( object.rotation );
+						_matrix.identity().makeRotationFromEuler( object.rotation );
 						object.quaternion.setFromRotationMatrix( _matrix );
 					};
 					update.quat = { x: object.quaternion.x, y: object.quaternion.y, z: object.quaternion.z, w: object.quaternion.w };
@@ -1350,7 +1350,7 @@ window.Physijs = (function() {
 	Physijs.Vehicle.prototype.addWheel = function( wheel_geometry, wheel_material, connection_point, wheel_direction, wheel_axle, suspension_rest_length, wheel_radius, is_front_wheel, tuning ) {
 		var wheel = new THREE.Mesh( wheel_geometry, wheel_material );
 		wheel.castShadow = wheel.receiveShadow = true;
-		wheel.position.copy( wheel_direction ).multiplyScalar( suspension_rest_length / 100 ).addSelf( connection_point );
+		wheel.position.copy( wheel_direction ).multiplyScalar( suspension_rest_length / 100 ).add( connection_point );
 		this.world.add( wheel );
 		this.wheels.push( wheel );
 
