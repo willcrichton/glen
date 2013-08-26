@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="style.css" />
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="jquery-1.10.min.js"></script>
+    <!--script src="https://raw.github.com/willcrichton/glen/master/build/glen.min.js"></script-->
+    <script src="three.js"></script>
+    <script src="physi.js"></script>
+    <script src="glen.js"></script>
+  </head>
+  <body>
+    <div id="chatbox">
+      <div id="chat"></div>
+      <form onsubmit="chat(this); return false">
+        <input type="text" id="talk" />
+      </form>
+    </div>
+    <script>
+    // initialize the world
+    var world = new Glen.World({
+      position: Glen.Util.Vector(0, 10, 0),
+      controls: true,
+      skybox: { path: 'skybox/' },
+      fullscreen: true
+    });
+
+    // add color to all objects
+    world.add(new THREE.AmbientLight(0x111111));
+
+    // create sun (directional light = parallel rays)
+    var sun = new Glen.Entity.DirectionalLight({
+      position: Glen.Util.Vector(-100, 50, 100),
+      intensity: 1.5,
+      color: 0xffffff
+    });
+    sun.shadowCameraFar = 300;
+    sun.shadowCameraLeft = -200;
+    sun.shadowCameraRight = 200;
+    sun.shadowCamraBottom = -200;
+    sun.shadowCameraTop = 200;
+    world.add(sun);
+
+    // add a grassy floor
+    world.add(new Glen.Entity.Floor({
+      width: 100, depth: 100,
+      material: Glen.Util.Material("images/grass.png")
+    }));
+
+    // define a Player object
+    var Player = function(args) {
+      $.extend(args, {
+        color: Glen.Util.Color(255, 0, 0),
+        width: 5, height: 5, depth: 5,
+        mass: 0
+      });
+
+      Glen.Entity.Block.call(this, args);
+    }
+    Player.prototype = Object.create(Glen.Entity.Block.prototype);
+
+    var id;
+    var players = {};
+    var name = "Minge Baggerson";
+    
+    var ws = io.connect(document.baseURI);
+    var events = {
+      'init': function(data) {
+        id = data.id;
+        console.log(data.players);
+        for(var i in data.players){
+          if(i == id) continue;
+          var pl = data.players[i];
+          var ent = new Player({
+            position: pl.position,
+            rotation: pl.rotation
+          });
+          world.add(ent);
+          players[pl.id] = ent;
+        }
+      },
+
+      'move': function(move) {
+        players[move.id].__dirtyPosition = true;
+        players[move.id].__dirtyRotation = true;
+        players[move.id].position.copy(move.pos);
+        players[move.id].rotation.copy(move.rot);
+      },
+
+      'joined': function(pl) {
+        console.log(pl.id + " joined");
+        var ent = new Player({
+          position: pl.position,
+          rotation: pl.rotation
+        });
+        world.add(ent);
+        players[pl.id] = ent;
+      },
+      
+      'left': function(id) {
+        console.log(id + " left");
+        console.log(players[id]);
+        world.remove(players[id]);
+        delete players[id];
+      },
+
+      'chat': function(text) {
+        pushChat(text);
+        $('#chatbox').fadeIn(100);
+        setTimeout(function(){
+            $('#chatbox').fadeOut(2000);
+        }, 5000);
+      }
+    }
+
+    for (e in events) {
+      ws.on(e, events[e]);
+    }
+
+    function chat(t){
+      ws.emit("chat", t.talk.value);
+      pushChat(t.talk.value);
+      $('#talk').blur()
+      t.talk.value = "";
+    }
+
+    var chatarea = document.getElementById('chat');
+    function pushChat(msg){
+      var html = '<div>' + msg + '</div>';
+      $('#chat').append(html);
+    }
+
+    isFocused = false;
+    $('#talk').focus(function(){
+      isFocused = true;
+    });
+    
+    $('#talk').blur(function(){
+      isFocused = false;
+      setTimeout(function(){
+        if (!isFocused) {
+          $('#chatbox').fadeOut(2000);
+        }
+      }, 5000);
+      });
+
+      world.addHook('Move', 'fklsad', function(cam){
+        ws.emit("move", {
+          rot: cam.object.rotation, 
+          pos: cam.object.position
+        });
+
+        if(isFocused){
+          return false;
+        }
+      });
+      
+      $(document).keypress(function(e){
+        if (e.which === 116 && !isFocused) { 
+          // 116 is "t"
+          $('#chatbox').fadeIn(100, function(){
+            $('#talk').focus();
+          });
+        } 
+      });
+
+      world.render();
+    </script>
+  </body>
+</html>

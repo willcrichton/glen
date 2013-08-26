@@ -5,6 +5,7 @@
 
 (function() {
     'use strict';
+
     // Cross-browser compatibility for requestAnimationFrame (used to update scene)
     if ( !window.requestAnimationFrame ) {
         window.requestAnimationFrame = ( function() {
@@ -48,18 +49,17 @@
             );
         },
 
-        // RGB to hex color function
-        Color: function(r,g,b){
+        Color: function(r, g, b) {
             r = Math.floor(r); g = Math.floor(g); b = Math.floor(b);
-            return parseInt(
-                (r < 16 ? "0" : "") + r.toString(16) + 
-                    (g < 16 ? "0" : "") + g.toString(16) + 
+            return new THREE.Color(parseInt(
+                (r < 16 ? "0" : "") + r.toString(16) +
+                    (g < 16 ? "0" : "") + g.toString(16) +
                     (b < 16 ? "0" : "") + b.toString(16),
-                16);
+                16));
         },
 
         RandomColor: function(){
-            return Color(
+            return Glen.Util.Color(
                 Math.floor(Math.random() * 255),
                 Math.floor(Math.random() * 255), 
                 Math.floor(Math.random() * 255)
@@ -70,25 +70,27 @@
             args = args || {};
             var material = Physijs.createMaterial(
                 new THREE.MeshPhongMaterial({ map: THREE.ImageUtils.loadTexture( path ), shading: THREE.FlatShading }),
-                args.friction || 0.4,
-                args.restitution || 0.6
+                args.friction !== undefined ? args.friction : 0.4,
+                args.restitution !== undefined ? args.restitution : 0.6
             );
             material.map.wrapS = material.map.wrapT = THREE.RepeatWrapping;
             material.map.repeat.set( args.repeatX || 2.5, args.repeatY || 2.5 );
             return material;
         },
 
-        ColorMaterial: function( r, g, b, lambert, friction, restitution ){
-            var color;
-            if( typeof r != "number" ) 
-                color = r;
-            else
-                color = Glen.Util.Color( r, g, b );
-            return new Physijs.createMaterial(
-                lambert ? new THREE.MeshLambertMaterial({ color: color, shading: THREE.FlatShading }) : 
-                new THREE.MeshPhongMaterial({ color: color, shading: THREE.FlatShading }),
-                friction || 0.4,
-                restitution || 0.6);
+        ColorMaterial: function( args ) {
+            var matArgs = {
+                color: args.color,
+                shading: THREE.FlatShading,
+                opacity: args.opacity !== undefined ? args.opacity : 1,
+                transparent: args.opacity !== 1
+            };
+            var mat = new Physijs.createMaterial(
+                args.lambert ? new THREE.MeshLambertMaterial(matArgs) : 
+                new THREE.MeshPhongMaterial(matArgs),
+                args.friction !== undefined ? args.friction : 1,
+                args.restitution !== undefined ? args.restitution : 0.3);
+            return mat;
         },
 
         loadModel: function( model, callback ){
@@ -137,8 +139,7 @@
         removeTimer: function( name ){
             this._timers[name] = undefined;
         }
-    }
-
+    };
 
     var 
     mouseX = 0, 
@@ -146,9 +147,13 @@
     projector = new THREE.Projector(),
     raycaster = new THREE.Raycaster();
     document.addEventListener('mousemove', function(event){
-        event.preventDefault();
-        mouseX = ( event.clientX / window.innerWidth ) * 2 - 1;
-        mouseY = - ( event.clientY / window.innerHeight ) * 2 + 1;
+        if (document.webkitPointerLockElement !== null) {
+            mouseX = 0;
+            mouseY = 0;
+        } else {
+            mouseX = ( event.clientX / window.innerWidth ) * 2 - 1;
+            mouseY = - ( event.clientY / window.innerHeight ) * 2 + 1;
+        }
     });
 
     Glen.Util.MouseTrace = function(camera){

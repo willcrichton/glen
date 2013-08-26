@@ -1,4 +1,4 @@
-/****************************************
+ /****************************************
 TODO:
 - pointer lock for safari?
 - websocket connection + player objects
@@ -19,11 +19,12 @@ TODO:
         args = args || {};
         
         // helper variables
-        this._clock = new THREE.Clock();    // for updating FPS controls
-        this._clock.start();
-        this._entities = {};                // dict of all entities in the world
-        this._eid = 0;                      // counter for entity IDs
+        this._renderClock = new THREE.Clock();    // for updating FPS controls
+        this._tickClock = new THREE.Clock();
+        this._physicsClock = new THREE.Clock();
+
         this._hooks = {};                   // dict of hooks to the world's events
+        this.tickDuration = 16;
         Glen._world = this;                 // update current main world
 
         var self = this;
@@ -42,7 +43,8 @@ TODO:
         // create scene which contains the objects in our world
         // we use Physijs for the physics
         this.scene = new Physijs.Scene();
-        this.scene.setGravity(args.gravity || Glen.Util.Vector(0, -30, 0));
+        this.scene.setGravity(args.gravity || new THREE.Vector3(0, -30, 0));
+        this.scene.addEventListener('update', this._simulate.bind(this));
 
         // set up renderer for displaying scene in the canvas
         this.renderer = new THREE.WebGLRenderer();
@@ -63,6 +65,11 @@ TODO:
                     args.camera.far
                 );
             }
+        } else if(args.orthographic) {
+            this.camera = new THREE.OrthographicCamera(
+                window.innerWidth / -16, window.innerWidth / 16, 
+                window.innerHeight / 16, window.innerHeight / -16,
+                    -200, 100000);
         } else {
             this.camera = new THREE.PerspectiveCamera( 60, this.canvasWidth / this.canvasHeight, 1, 100000 );
         }
@@ -90,7 +97,7 @@ TODO:
                 mouseY = event.clientY - window.innerHeight / 2;
             }, false);
             
-            this.addHook('Think', '_CameraUpdate', function(){
+            this.addHook('Tick', '_CameraUpdate', function(){
                 var camera = this.camera;
                 camera.position.x += ( mouseX - camera.position.x ) * 0.01;
                 camera.position.y += ( - mouseY - camera.position.y ) * 0.01;
@@ -101,14 +108,18 @@ TODO:
         this.camera.lookAt(args.lookAt || this.scene.position);
 
         // begin rendering unless told otherwise
-        if(args.autoStart) 
-            this.render();
+        this._running = false;
+        if(args.autoStart === undefined || args.autoStart) { 
+            this.initialize();
+        }
 
-        if( args.skybox )
+        if( args.skybox ) {
             this.setSkybox( args.skybox.path, args.skybox.ext );
+        }
 
-        if( args.fog )
+        if( args.fog ) {
             this.setFog( args.fog.color, args.fog.distance );
+        }
 
         if( args.fullscreen ){
             var event = typeof args.fullscreen == "string" ? args.fullscreen : "dblclick";
@@ -116,12 +127,14 @@ TODO:
         }
         
         // Set up Click hook
-        document.addEventListener('click', (function(){
-            var ent = Glen.Util.MouseTrace(this.camera).object._entity;
-            console.log(ent);
-            self.callHook('Click', ent);
-            if(ent) ent.callHook('Click');
-        }).bind(this));
+        document.addEventListener('click', function(){
+            var ent = Glen.Util.MouseTrace(self.camera);
+            if (ent !== undefined) {
+                ent = ent.object;
+                self.callHook('Click', ent);
+                if(ent) ent.callHook('Click');
+            }
+        });
 
         // Simple KeyPress hook
         document.addEventListener('keypress', function(e){
@@ -130,44 +143,31 @@ TODO:
     };
 
     Glen.World.prototype = {
-        render: function(){
-            // requestAnimationFrame is some fancy shit we need to make the animation
-            // smooth between frames, see three.js docs for reference
-            var self = this;
-            requestAnimationFrame(function(){ self.render(); });
 
-            if(this.controls){
-                this.controls.update(this._clock.getDelta());   // update controls
-            }
-            this.scene.simulate();                              // update physics
-            this._think();                                      // run internal thinking
-            if(this._fx)
-                this.composer.render();
-            else 
-                this.renderer.render(this.scene, this.camera);
-            this.callHook('Render');                            // render hooks
-        },
+        /* 
+         * Public API
+         */
 
-        _think: function(){
-            // do things on think
-            var trace = Glen.Util.MouseTrace(this.camera);
-            if (trace !== undefined && 
-               trace.object._entity !== undefined) {
-                var hoverEnt = trace.object._entity;
-                if(hoverEnt != this._hovering){
-                    world.callHook('MouseEnter', hoverEnt);
-                    hoverEnt.callHook('MouseEnter');
-                    this._hovering = hoverEnt;
-                }
-                world.callHook('MouseHover', hoverEnt);
-                hoverEnt.callHook('MouseHover');
-            } else {
-                this._hovering = undefined;
+        initialize: function() {
+            if (this._running) {
+                return;
             }
 
-            this.callHook('Think', this);
-            for(var i in this._entities)
-                this._entities[i].callHook('Think');
+            // start render loop
+            requestAnimationFrame(this._render.bind(this));
+
+            // start physics simulation
+            this.scene.simulate();
+
+            // start tick loop (for game logic)
+            this._timerId = setInterval(this._tick.bind(this), this.tickDuration);
+
+            // start clocks (to check deltas)
+            this._renderClock.start();
+            this._tickClock.start();
+            this._physicsClock.start();
+
+            this._running = true;
         },
 
         addHook: function(hook, name, callback){
@@ -198,13 +198,11 @@ TODO:
         add: function(ent){
             if(!ent) return;
             this.scene.add(ent);
-            this._entities[ent.id] = ent;
         },
 
         remove: function(obj){
             if(!obj) return;
-            delete this._entities[obj.id];
-            this.scene.removeChildRecurse(obj);
+            this.scene.remove(obj);
         },
 
         listenFullScreen: function( event ){
@@ -261,7 +259,8 @@ TODO:
 
         setFog : function( color, density ){
             if( color ){
-                this.scene.fog = new THREE.FogExp2( color || 0xFFFFFF, density || 0.00015 );
+                this.scene.fog = new THREE.FogExp2( color || 0xFFFFFF, density || 0.0003 );
+                this.renderer.setClearColor(this.scene.fog.color, 1);
                 this._fog = this.scene.fog;
             } else {
                 this.scene.fog = this._fog;
@@ -286,6 +285,53 @@ TODO:
                 copy.renderToScreen = true;
                 this.composer.addPass(copy);
             }
+        },
+        
+        /*
+         * Private functions
+         */
+        
+        _render: function(){
+            if(this._fx) {
+                this.composer.render();
+            } else {
+                this.renderer.render(this.scene, this.camera);
+            }
+
+            if(this.controls){
+                this.controls.update(this._renderClock.getDelta());   // update controls
+            }
+
+            this.callHook('Render');                            // render hooks
+
+            requestAnimationFrame(this._render.bind(this));
+        },
+
+        _tick: function(){
+            var trace = Glen.Util.MouseTrace(this.camera);
+            if (trace !== undefined && 
+               trace.object !== undefined) {
+                var hoverEnt = trace.object;
+                if(hoverEnt != this._hovering){
+                    world.callHook('MouseEnter', hoverEnt);
+                    hoverEnt.callHook('MouseEnter');
+                    this._hovering = hoverEnt;
+                }
+                world.callHook('MouseHover', hoverEnt);
+                hoverEnt.callHook('MouseHover');
+            } else {
+                this._hovering = undefined;
+            }
+
+            this.callHook('Tick', this._tickClock.getDelta());
+            this.scene.traverse(function(e) {
+                e.callHook('Tick');
+            });
+        },
+
+        _simulate: function() {
+            this.scene.simulate(undefined, 1);
+            this.callHook('Simulate', this._physicsClock.getDelta());
         }
     };
 })();

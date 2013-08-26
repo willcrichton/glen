@@ -24,6 +24,7 @@
             },
             
             setPosition: function( vector ){
+                this.__dirtyPosition = true;
                 this.position = vector.clone();
             },
             
@@ -32,6 +33,7 @@
             },
             
             setRotation: function( vector ){
+                this.__dirtyRotation = true;
                 this.rotation = vector.clone();
             },
             
@@ -49,7 +51,7 @@
 
             addHook: function(hook, callback){
                 if (!this.hooks) {
-                    this.hooks = {}
+                    this.hooks = {};
                 }
                 if (!this.hooks[hook]) { 
                     this.hooks[hook] = [];
@@ -66,12 +68,8 @@
                 for (var i in this.hooks[hook]) {
                     this.hooks[hook][i].apply(this, args);
                 }
-            },
-            
-            remove: function(){
-                Glen._world.remove( this );
-            },
-        }
+            }
+         }
     );
 
     function getMaterial(args) {
@@ -86,48 +84,62 @@
         return material;
     }
 
-    function setLocation(mesh, args) {
+    // todo: figure out a more dynamic prototype-oriented approach to
+    // setting base options
+    function setBaseOptions(mesh, args) {
         mesh.rotation.copy(args.rotation || Glen.Util.Vector(0,0,0));
         mesh.position.copy(args.position || Glen.Util.Vector(0,0,0));
         mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        mesh.shadowMapWidth = args.shadowMapWidth || 4096;
+        mesh.shadowMapHeight = args.shadowMapHeight || 4096;
     }
 
+    // Geometries
     Glen.Entity.Block = function(args) {
         var geometry = new THREE.CubeGeometry(args.width, args.height, args.depth);
         Physijs.BoxMesh.call(this, geometry, getMaterial(args), args.mass, {
-            restitution: args.restitution || .2
+            restitution: args.restitution || 0.2
         });
-        setLocation(this, args);
-    }
+        setBaseOptions(this, args);
+    };
     Glen.Entity.Block.prototype = Object.create(Physijs.BoxMesh.prototype);
 
     Glen.Entity.Floor = function(args) {
         args.height = 1;
         args.mass = 0;
-        Glen.Entity.Block.call(this, args)
+        Glen.Entity.Block.call(this, args);
         this.castShadow = false;
-        this.receiveShadow = true;
-    }
+    };
     Glen.Entity.Floor.prototype = Object.create(Glen.Entity.Block.prototype);
 
     Glen.Entity.Sphere = function(args) {
-        var geometry = new THREE.SphereGeometry(args.radius, args.segments, args.rings);
-        Physijs.SphereMesh.call(this, getMaterial(args), 0, {
-            restitution: args.restitution || .2
+        var geometry = new THREE.SphereGeometry(args.radius, args.segments || 10, args.rings || 10);
+        Physijs.SphereMesh.call(this, geometry, getMaterial(args), args.mass, {
+            restitution: args.restitution || 0.2
         });
-        setLocation(this, args);
-    }
+        setBaseOptions(this, args);
+    };
     Glen.Entity.Sphere.prototype = Object.create(Physijs.SphereMesh.prototype);
 
     Glen.Entity.Text = function(args) {
         var geometry = new THREE.TextGeometry(args.text, args);
         Physijs.ConvexMesh.call(this, getMaterial(args), 0, {
-            restitution: args.restitution || .2
+            restitution: args.restitution || 0.2
         });
-        setLocation(this, args);
-    }
+        setBaseOptions(this, args);
+    };
     Glen.Entity.Text.prototype = Object.create(Physijs.ConvexMesh.prototype);
 
+    // Lighting
+    Glen.Entity.DirectionalLight = function(args) {
+        THREE.DirectionalLight.call(this, args.color, args.intensity);
+        setBaseOptions(this, args);
+        this.receiveShadow = false;
+    };
+    Glen.Entity.DirectionalLight.prototype = Object.create(THREE.DirectionalLight.prototype);
+
+    // Other
     Glen.Entity.Model = function(args) {
         if(args.geometry === undefined) {
             var loader = new THREE.JSONLoader();
@@ -138,6 +150,6 @@
         } else {
             Physijs.ConvexMesh.call(this, args.geometry, new THREE.MeshLambertMaterial());
         }
-    }
+    };
     Glen.Entity.Model.prototype = Object.create(Physijs.ConvexMesh.prototype);
 })();

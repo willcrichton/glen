@@ -1,0 +1,11 @@
+{
+    "name": "multiplayer",
+    "version": "0.0.1",
+    "author": "Will Crichton <crichton.will@gmail.com>",
+    "description": "Multiplayer server for Glen",
+    "dependencies": {
+        "socket.io": "0.9.16",
+        "node-static": "0.7.0"
+    }
+}
+    
